@@ -281,11 +281,11 @@ class Executor<SYCL> {
     using LHS_type = typename blas::Evaluate<Tree>::LHS_type;
     auto _N = t.getSize();
     auto localSize = t.blqS;
-    // IF THERE ARE ENOUGH ELEMENTS, EACH BLOCK PROCESS TWO BLOCKS OF ELEMENTS
-    // THEREFORE, 2*GLOBALSIZE ELEMENTS ARE PROCESSED IN A STEP
+    // IF THERE ARE ENOUGH ELEMENTS, EACH BLOCK PROCESS LOCAL_REDUCTIONS BLOCKS OF ELEMENTS
+    // THEREFORE, LOCAL_REDUCTIONS*GLOBALSIZE ELEMENTS ARE PROCESSED IN A STEP
     // MOREOVER, A LOOP ALLOWS TO REPEAT THE PROCESS UNTIL
     // ALL THE ELEMENTS ARE PROCESSED
-    auto nWG = (t.grdS + (2 * localSize) - 1) / (2 * localSize);
+    auto nWG = (t.grdS + (LOCAL_REDUCTIONS * localSize) - 1) / (LOCAL_REDUCTIONS * localSize);
     auto lhs = t.l;
     auto rhs = t.r;
 
@@ -315,7 +315,7 @@ class Executor<SYCL> {
                                                 globalSize, sharedSize);
       }
       _N = nWG;
-      nWG = (_N + (2 * localSize) - 1) / (2 * localSize);
+      nWG = (_N + (LOCAL_REDUCTIONS * localSize) - 1) / (LOCAL_REDUCTIONS * localSize);
       frst = false;
       even = !even;
     } while (_N > 1);
@@ -332,11 +332,11 @@ class Executor<SYCL> {
     using LHS_type = typename blas::Evaluate<Tree>::LHS_type;
     auto _N = t.getSize();
     auto localSize = t.blqS;
-    // IF THERE ARE ENOUGH ELEMENTS, EACH BLOCK PROCESS TWO BLOCKS OF ELEMENTS
-    // THEREFORE, 2*GLOBALSIZE ELEMENTS ARE PROCESSED IN A STEP
+    // IF THERE ARE ENOUGH ELEMENTS, EACH BLOCK PROCESS LOCAL_REDUCTIONS BLOCKS OF ELEMENTS
+    // THEREFORE, LOCAL_REDUCTIONS*GLOBALSIZE ELEMENTS ARE PROCESSED IN A STEP
     // MOREOVER, A LOOP ALLOWS TO REPEAT THE PROCESS UNTIL
     // ALL THE ELEMENTS ARE PROCESSED
-    auto nWG = (t.grdS + (2 * localSize) - 1) / (2 * localSize);
+    auto nWG = (t.grdS + (LOCAL_REDUCTIONS * localSize) - 1) / (LOCAL_REDUCTIONS * localSize);
     auto lhs = t.l;
     auto rhs = t.r;
 
@@ -364,7 +364,7 @@ class Executor<SYCL> {
                                                 globalSize, sharedSize);
       }
       _N = nWG;
-      nWG = (_N + (2 * localSize) - 1) / (2 * localSize);
+      nWG = (_N + (LOCAL_REDUCTIONS * localSize) - 1) / (LOCAL_REDUCTIONS * localSize);
       frst = false;
       even = !even;
     } while (_N > 1);

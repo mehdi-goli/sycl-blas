@@ -34,6 +34,8 @@
 #include <views/view_sycl.hpp>
 #include <operations/blas_operators.hpp>
 
+#define LOCAL_REDUCTIONS 2
+
 namespace blas {
 namespace internal {
 
@@ -268,17 +270,19 @@ struct ReducAssignNewOp2 {
 
   value_type eval(size_t i) {
     size_t vecS = r.getSize();
-    size_t frs_thrd = 2 * blqS * i;
+    size_t frs_thrd = LOCAL_REDUCTIONS * blqS * i;
     size_t lst_thrd = ((frs_thrd + blqS) > vecS) ? vecS : (frs_thrd + blqS);
     // Reduction across the grid
     value_type val = Operator::init(r);
     for (size_t j = frs_thrd; j < lst_thrd; j++) {
       value_type local_val = Operator::init(r);
-      for (size_t k = j; k < vecS; k += 2 * grdS) {
+      for (size_t k = j; k < vecS; k += LOCAL_REDUCTIONS * grdS) {
         local_val = Operator::eval(local_val, r.eval(k));
-        local_val = ((k + blqS) < vecS)
-                        ? Operator::eval(local_val, r.eval(k + blqS))
-                        : local_val;
+        if (LOCAL_REDUCTIONS > 1) {
+          local_val = ((k + blqS) < vecS)
+                          ? Operator::eval(local_val, r.eval(k + blqS))
+                          : local_val;
+       }
       }
       // Reduction inside the block
       val = Operator::eval(val, local_val);
@@ -293,14 +297,16 @@ struct ReducAssignNewOp2 {
     size_t groupid = ndItem.get_group(0);
 
     size_t vecS = r.getSize();
-    size_t frs_thrd = 2 * groupid * localSz + localid;
+    size_t frs_thrd = LOCAL_REDUCTIONS * groupid * localSz + localid;
 
     // Reduction across the grid
     value_type val = Operator::init(r);
-    for (size_t k = frs_thrd; k < vecS; k += 2 * grdS) {
+    for (size_t k = frs_thrd; k < vecS; k += LOCAL_REDUCTIONS * grdS) {
       val = Operator::eval(val, r.eval(k));
-      if ((k + blqS < vecS)) {
-        val = Operator::eval(val, r.eval(k + blqS));
+      if (LOCAL_REDUCTIONS > 1) {
+        if ((k + blqS < vecS)) {
+          val = Operator::eval(val, r.eval(k + blqS));
+        }
       }
     }
 
@@ -375,17 +381,19 @@ struct ReducAssignNewOp3 {
 
   res_type eval(size_t i) {
     size_t vecS = r.getSize();
-    size_t frs_thrd = 2 * blqS * i;
+    size_t frs_thrd = LOCAL_REDUCTIONS * blqS * i;
     size_t lst_thrd = ((frs_thrd + blqS) > vecS) ? vecS : (frs_thrd + blqS);
     // Reduction across the grid
     res_type val = Operator::init(r, l);
     for (size_t j = frs_thrd; j < lst_thrd; j++) {
       res_type local_val = Operator::init(r, l);
-      for (size_t k = j; k < vecS; k += 2 * grdS) {
+      for (size_t k = j; k < vecS; k += LOCAL_REDUCTIONS * grdS) {
         local_val = Operator::eval(local_val, k, r.eval(k));
-        local_val = ((k + blqS) < vecS) ? Operator::eval(local_val, (k + blqS),
-                                                         r.eval(k + blqS))
-                                        : local_val;
+        if (LOCAL_REDUCTIONS > 1) {
+          local_val = ((k + blqS) < vecS) ? Operator::eval(local_val, (k + blqS),
+                                                           r.eval(k + blqS))
+                                          : local_val;
+       }
       }
       // Reduction inside the block
       val = Operator::eval(val, local_val);
@@ -400,15 +408,17 @@ struct ReducAssignNewOp3 {
     size_t groupid = ndItem.get_group(0);
 
     size_t vecS = r.getSize();
-    size_t frs_thrd = 2 * groupid * localSz + localid;
+    size_t frs_thrd = LOCAL_REDUCTIONS * groupid * localSz + localid;
 
     // Reduction across the grid
     res_type val = Operator::init(r, l);
-    for (size_t k = frs_thrd; k < vecS; k += 2 * grdS) {
+    for (size_t k = frs_thrd; k < vecS; k += LOCAL_REDUCTIONS * grdS) {
       val = Operator::eval(val, k, r.eval(k));
-      val = ((k + blqS) < vecS)
-                ? Operator::eval(val, (k + blqS), r.eval(k + blqS))
-                : val;
+      if (LOCAL_REDUCTIONS > 1) {
+        val = ((k + blqS) < vecS)
+                  ? Operator::eval(val, (k + blqS), r.eval(k + blqS))
+                  : val;
+      }
     }
     scratch[localid] = val;
     // This barrier is mandatory to be sure the data is on the shared memory

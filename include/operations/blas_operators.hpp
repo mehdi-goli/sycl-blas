@@ -68,7 +68,7 @@ namespace blas {
     }                                                                 \
   };
 
-  namespace computecpp_details{
+namespace computecpp_details {
 /* strip_asp.
  * When using ComputeCpp CE, the Device Compiler uses Address Spaces
  * to deal with the different global memories.
@@ -80,17 +80,22 @@ namespace blas {
  * the address space for various types.
  */
 #if defined(__SYCL_DEVICE_ONLY__) && defined(__COMPUTECPP__)
- template <class T> static T f(__attribute__((address_space(1))) T*);
- template <class T> static T f(__attribute__((address_space(2))) T*);
- template <class T> static T f(__attribute__((address_space(3))) T*);
-#endif // __SYCL_DEVICE_ONLY__  && __COMPUTECPP__
+template <class T>
+static T f(__attribute__((address_space(1))) T *);
+template <class T>
+static T f(__attribute__((address_space(2))) T *);
+template <class T>
+static T f(__attribute__((address_space(3))) T *);
+#endif  // __SYCL_DEVICE_ONLY__  && __COMPUTECPP__
 
-template <class T> static T f(T*);
- } // end namespace computecpp_details
+template <class T>
+static T f(T *);
+}  // end namespace computecpp_details
 
-template <class Tp> class strip_asp {
-  public:
-    typedef decltype( computecpp_details::f( (Tp*)0 ) ) type;
+template <class Tp>
+class strip_asp {
+ public:
+  typedef decltype(computecpp_details::f((Tp *)0)) type;
 };
 
 /**
@@ -101,7 +106,7 @@ template <class Tp> class strip_asp {
  * To choose the appropriate one we use this template specialization
  * that is enabled for floating point to use fabs, and abs for everything else.
  */
- struct syclblas_abs {
+struct syclblas_abs {
   template <typename Type>
   static Type eval(const Type &val,
                    typename std::enable_if<!std::is_floating_point<

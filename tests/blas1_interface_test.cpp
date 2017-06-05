@@ -35,13 +35,13 @@ int main(int argc, char *argv[]) {
                           std::numeric_limits<double>::min())),
         vImin(1, IndVal<double>(std::numeric_limits<size_t>::max(),
                                 std::numeric_limits<double>::max()));
-    /* vI.push_back(maxOp2_struct::init()); */
 
     size_t vSeed, gap;
     double minV, maxV;
 
     // INITIALIZING DATA
-    vSeed = 1;
+    vSeed = time(NULL) / 10 * 10;
+
     minV = -10.0;
     maxV = 10.0;
     gap = (size_t)(maxV - minV + 1);
@@ -49,11 +49,9 @@ int main(int argc, char *argv[]) {
     std::for_each(std::begin(vX), std::end(vX),
                   [&](double &elem) { elem = minV + (double)(rand() % gap); });
 
-    vSeed = 1;
     minV = -30.0;
     maxV = 10.0;
     gap = (size_t)(maxV - minV + 1);
-    srand(vSeed);
     std::for_each(std::begin(vY), std::end(vY),
                   [&](double &elem) { elem = minV + (double)(rand() % gap); });
 
@@ -69,10 +67,10 @@ int main(int argc, char *argv[]) {
       dot += (elem * vX[i]);
       nrmX += vX[i] * vX[i];
       nrmY += elem * elem;
-      if (std::abs(elem) >= std::abs(max)) {
+      if (std::abs(elem) > std::abs(max)) {
         max = elem, indMax = i;
       }
-      if (std::abs(elem) <= std::abs(min)) {
+      if (std::abs(elem) < std::abs(min)) {
         min = elem, indMin = i;
       }
       if (i == 0) {

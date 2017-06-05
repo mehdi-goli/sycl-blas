@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 
 int main(int argc, char *argv[]) {
-  int seed = time(NULL) / 100 * 100;
+  int seed = time(NULL) / 30;
   srand(seed);
   std::cout << "seed: " << seed << std::endl;
   ::testing::InitGoogleTest(&argc, argv);

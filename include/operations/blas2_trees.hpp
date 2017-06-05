@@ -26,7 +26,6 @@
 #ifndef BLAS2_TREES_HPP
 #define BLAS2_TREES_HPP
 
-#include <iostream>
 #include <stdexcept>
 #include <vector>
 

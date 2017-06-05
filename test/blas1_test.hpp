@@ -58,7 +58,7 @@ public:
   }
 
   template <class U = T>
-  static void print_cont(C<U> &vec, std::string name = "vector") {
+  static void print_cont(const C<U> &vec, std::string name = "vector") {
     std::cout << name << ": ";
     for(auto &e : vec)
       std::cout << e << " ";
@@ -116,5 +116,9 @@ TYPED_TEST_CASE(BLAS1_Test, BlasTypes);
   using T=typename B::type; \
   using _T=TEST_B<B>; \
   using E=typename B::executor;
+#define EXECUTE(name) auto q = _T::make_queue(); Executor<E> name(q);
+#define TO_VIEW(name) \
+  auto buf_##name = _T::make_buffer(name); \
+  auto view_##name = _T::make_vview(buf_##name);
 
 #endif

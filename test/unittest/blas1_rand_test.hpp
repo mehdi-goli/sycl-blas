@@ -2,12 +2,6 @@
 
 #include "blas1_test.hpp"
 
-// to avoid annoying code duplication
-#define EXECUTE(name) auto q = _T::make_queue(); Executor<E> name(q);
-#define TO_VIEW(name) \
-  auto buf_##name = _T::make_buffer(name); \
-  auto view_##name = _T::make_vview(buf_##name);
-
 // it is important that all tests are run with the same test size
 template <class B>
 size_t test_size() {

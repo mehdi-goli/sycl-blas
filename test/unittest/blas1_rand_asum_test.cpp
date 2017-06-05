@@ -10,7 +10,7 @@ B1_TEST(asum_test) {
   T res(0);
   for(auto &x:vX)
     res += std::abs(x);
-  // sycl
+  // SYCL
   EXECUTE(ex) {
     TO_VIEW(vX); TO_VIEW(vR);
     _asum<E>(ex, size, view_vX, 1, view_vR);

@@ -10,7 +10,7 @@ B1_TEST(axpy_test) {
   Container<B> vZ(size, 0);
   for(size_t i = 0; i < size; ++i)
     vZ[i] = alpha * vX[i] + vY[i];
-  // sycl
+  // SYCL
   EXECUTE(ex) {
     TO_VIEW(vX); TO_VIEW(vY);
     _axpy<E>(ex, size, alpha, view_vX, 1, view_vY, 1);

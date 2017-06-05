@@ -1,10 +1,12 @@
 #include <cstdlib>
 
-#include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 int main(int argc, char *argv[]) {
-  srand(time(NULL)/10*10);
+  int seed = time(NULL) / 100 * 100;
+  srand(seed);
+  std::cout << "seed: " << seed << std::endl;
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

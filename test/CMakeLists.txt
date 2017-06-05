@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.2)
+cmake_minimum_required(VERSION 3.0.2)
 
 project(syclblas_gtest)
 
@@ -41,13 +41,27 @@ include_directories(
 )
 
 # compiling tests
-file(GLOB SRCS *.cpp)
-add_executable(blas1_test ${SRCS})
-set_property(TARGET blas1_test PROPERTY CXX_STANDARD 11)
-target_link_libraries(blas1_test PUBLIC libgtest libgmock)
-add_sycl_to_target(blas1_test ${CMAKE_CURRENT_BINARY_DIR} ${SYCLBLAS_TEST}/blas1_simple_axpy.cpp)
+file(GLOB SYCL_SRCS
+  ${SYCLBLAS_TEST}/blas1_simple_axpy.cpp
+  ${SYCLBLAS_TEST}/blas1_rand_copy_test.cpp
+  ${SYCLBLAS_TEST}/blas1_rand_swap_test.cpp
+  ${SYCLBLAS_TEST}/blas1_rand_axpy_test.cpp
+  ${SYCLBLAS_TEST}/blas1_rand_asum_test.cpp
+  ${SYCLBLAS_TEST}/blas1_rand_dot_test.cpp
+  ${SYCLBLAS_TEST}/blas1_rand_nrm2_test.cpp
+  ${SYCLBLAS_TEST}/blas1_rand_imax_test.cpp
+  ${SYCLBLAS_TEST}/blas1_rand_imin_test.cpp
+)
 
-enable_testing()
-
-add_test(name blas1_test command ${CMAKE_CURRENT_BINARY_DIR}/blas1_test)
-message("-- Created google tests")
+foreach(blas_test ${SYCL_SRCS})
+  message("-- blas test: ${blas_test}")
+  get_filename_component(test_exec ${blas_test} NAME_WE)
+  message("-- test exec: ${test_exec}")
+  set(test_exec, ${blas_test})
+  add_executable(${test_exec} main.cpp ${blas_test})
+  set_property(TARGET ${test_exec} PROPERTY CXX_STANDARD 11)
+  target_link_libraries(${test_exec} PUBLIC libgtest libgmock)
+  add_sycl_to_target(${test_exec} ${CMAKE_CURRENT_BINARY_DIR} ${blas_test})
+  add_test(name ${test_exec} command ${CMAKE_CURRENT_BINARY_DIR}/${test_exec})
+  message("-- Created google test ${test_exec}")
+endforeach()

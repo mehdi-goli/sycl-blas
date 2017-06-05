@@ -346,8 +346,8 @@ struct AssignReduction {
 
 template <typename Operator, typename LHS, typename RHS>
 AssignReduction<Operator, LHS, RHS> make_AssignReduction(LHS &l, RHS &r,
-                                                             size_t blqS,
-                                                             size_t grdS) {
+                                                         size_t blqS,
+                                                         size_t grdS) {
   return AssignReduction<Operator, LHS, RHS>(l, r, blqS, grdS);
 }
 

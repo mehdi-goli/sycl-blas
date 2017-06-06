@@ -29,9 +29,9 @@
 #include <stdexcept>
 #include <vector>
 
-#include <views/view_sycl.hpp>
 #include <operations/blas3_trees.hpp>
 #include <operations/blas_operators.hpp>
+#include <views/view_sycl.hpp>
 
 namespace blas {
 

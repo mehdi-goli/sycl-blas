@@ -4,15 +4,13 @@ B1_TEST(iamin_test) {
   UNPACK_PARAM;
   TESTSIZE(size);
   auto vX = _T::make_randcont(size);
-  Container<B, IndVal<T>> vI(1, IndVal<T>(
-           std::numeric_limits<size_t>::max(),
-           std::numeric_limits<T>::max()));
+  Container<B, IndVal<T>> vI(1, IndVal<T>(std::numeric_limits<size_t>::max(),
+                                          std::numeric_limits<T>::max()));
   // single-threaded
   T min = 1e9;
   size_t imin = std::numeric_limits<size_t>::max();
-  for(size_t i = 0; i < vX.size(); ++i)
-    if(std::abs(vX[i]) < std::abs(min))
-      min=vX[i], imin=i;
+  for (size_t i = 0; i < vX.size(); ++i)
+    if (std::abs(vX[i]) < std::abs(min)) min = vX[i], imin = i;
   IndVal<T> res(imin, min);
   // SYCL
   EXECUTE(ex) {

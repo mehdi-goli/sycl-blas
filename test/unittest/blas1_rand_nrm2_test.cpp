@@ -3,12 +3,10 @@
 B1_TEST(nrm2_test) {
   UNPACK_PARAM;
   TESTSIZE(size);
-  auto vX = _T::make_randcont(size),
-       vR = Container<B>(1, T(0));
+  auto vX = _T::make_randcont(size), vR = Container<B>(1, T(0));
   // single-threaded
   T res(0);
-  for(size_t i = 0; i < size; ++i)
-    res += vX[i] * vX[i];
+  for (size_t i = 0; i < size; ++i) res += vX[i] * vX[i];
   res = std::sqrt(res);
   // SYCL
   EXECUTE(ex) {

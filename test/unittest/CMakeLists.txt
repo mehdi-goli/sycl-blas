@@ -10,6 +10,10 @@ include_directories(${SYCLBLAS_TEST})
 # compiling tests
 file(GLOB SYCL_UNITTEST_SRCS
   ${SYCLBLAS_UNITTEST}/blas1_simple_axpy.cpp
+  ${SYCLBLAS_UNITTEST}/blas1_simple_axpy_tests.cpp
+  ${SYCLBLAS_UNITTEST}/blas1_simple_asum_tests.cpp
+  ${SYCLBLAS_UNITTEST}/blas1_simple_dot_tests.cpp
+  ${SYCLBLAS_UNITTEST}/blas1_simple_nrm2_tests.cpp
   ${SYCLBLAS_UNITTEST}/blas1_rand_copy_test.cpp
   ${SYCLBLAS_UNITTEST}/blas1_rand_swap_test.cpp
   ${SYCLBLAS_UNITTEST}/blas1_rand_axpy_test.cpp

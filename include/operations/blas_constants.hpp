@@ -154,10 +154,10 @@ SYCLBLAS_DEFINE_CONSTANT(
                           std::numeric_limits<double>::min())))
 SYCLBLAS_DEFINE_CONSTANT(IndVal<float>, const_val::imax,
                          (IndVal<float>(std::numeric_limits<size_t>::max(),
-                                         std::numeric_limits<float>::max())))
+                                        std::numeric_limits<float>::max())))
 SYCLBLAS_DEFINE_CONSTANT(IndVal<float>, const_val::imin,
                          (IndVal<float>(std::numeric_limits<size_t>::max(),
-                                         std::numeric_limits<float>::min())))
+                                        std::numeric_limits<float>::min())))
 SYCLBLAS_DEFINE_CONSTANT(IndVal<double>, const_val::imax,
                          (IndVal<double>(std::numeric_limits<size_t>::max(),
                                          std::numeric_limits<double>::max())))

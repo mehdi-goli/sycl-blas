@@ -9,19 +9,15 @@ include_directories(${SYCLBLAS_TEST})
 
 # compiling tests
 file(GLOB SYCL_UNITTEST_SRCS
-  ${SYCLBLAS_UNITTEST}/blas1_simple_axpy.cpp
-  ${SYCLBLAS_UNITTEST}/blas1_simple_axpy_tests.cpp
-  ${SYCLBLAS_UNITTEST}/blas1_simple_asum_tests.cpp
-  ${SYCLBLAS_UNITTEST}/blas1_simple_dot_tests.cpp
-  ${SYCLBLAS_UNITTEST}/blas1_simple_nrm2_tests.cpp
-  ${SYCLBLAS_UNITTEST}/blas1_rand_copy_test.cpp
-  ${SYCLBLAS_UNITTEST}/blas1_rand_swap_test.cpp
-  ${SYCLBLAS_UNITTEST}/blas1_rand_axpy_test.cpp
-  ${SYCLBLAS_UNITTEST}/blas1_rand_asum_test.cpp
-  ${SYCLBLAS_UNITTEST}/blas1_rand_dot_test.cpp
-  ${SYCLBLAS_UNITTEST}/blas1_rand_nrm2_test.cpp
-  ${SYCLBLAS_UNITTEST}/blas1_rand_imax_test.cpp
-  ${SYCLBLAS_UNITTEST}/blas1_rand_imin_test.cpp
+  ${SYCLBLAS_UNITTEST}/blas1_copy_test.cpp
+  ${SYCLBLAS_UNITTEST}/blas1_swap_test.cpp
+  ${SYCLBLAS_UNITTEST}/blas1_axpy_test.cpp
+  ${SYCLBLAS_UNITTEST}/blas1_asum_test.cpp
+  ${SYCLBLAS_UNITTEST}/blas1_dot_test.cpp
+  ${SYCLBLAS_UNITTEST}/blas1_nrm2_test.cpp
+  ${SYCLBLAS_UNITTEST}/blas1_rotg_test.cpp
+  ${SYCLBLAS_UNITTEST}/blas1_imax_test.cpp
+  ${SYCLBLAS_UNITTEST}/blas1_imin_test.cpp
 )
 
 foreach(blas_test ${SYCL_UNITTEST_SRCS})

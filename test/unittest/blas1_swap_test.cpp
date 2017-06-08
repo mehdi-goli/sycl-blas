@@ -1,10 +1,20 @@
-#include "blas1_rand_test.hpp"
+#include "blas1_test.hpp"
+
+typedef ::testing::Types<
+  blas_args<float>,
+  blas_args<double>
+> BlasTypes;
+
+TYPED_TEST_CASE(BLAS1_Test, BlasTypes);
+
+REGISTER_SIZE(RANDOM_SIZE, swap_test)
 
 B1_TEST(swap_test) {
-  UNPACK_PARAM;
-  TESTSIZE(size);
+  UNPACK_PARAM(swap_test);
+  size_t size = TEST_SIZE;
+
   auto vX = _T::make_randcont(size), vY = _T::make_randcont(size);
-  Container<B> vZ(size, T(0)), vT(size, T(0));
+  Container<_T> vZ(size, T(0)), vT(size, T(0));
   for (size_t i = 0; i < size; ++i) vZ[i] = vX[i], vT[i] = vY[i];
   EXECUTE(ex) {
     TO_VIEW(vX);

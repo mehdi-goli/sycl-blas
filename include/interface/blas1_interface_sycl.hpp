@@ -436,12 +436,11 @@ size_t _iamin(Executor<ExecutorType> ex, int _N, vector_view<T, ContainerT> _vx,
  */
 template <typename T>
 void _rotg(T &_alpha, T &_beta, T &_cos, T &_sin) {
-  T abs_alpha = std::abs(_alpha);
-  T abs_beta = std::abs(_beta);
-  T roe = (abs_alpha > abs_beta) ? _alpha : _beta;
-  T scale = abs_alpha + abs_beta;
-  T norm;
-  T aux;
+  T abs_alpha = std::abs(_alpha),
+    abs_beta = std::abs(_beta),
+    roe = (abs_alpha > abs_beta) ? _alpha : _beta,
+    scale = abs_alpha + abs_beta,
+    norm, aux;
 
   if (scale == constant<T, const_val::zero>::value) {
     _cos = constant<T, const_val::one>::value;
@@ -462,8 +461,7 @@ void _rotg(T &_alpha, T &_beta, T &_cos, T &_sin) {
       aux = constant<T, const_val::one>::value;
     }
   }
-  _alpha = norm;
-  _beta = aux;
+  _alpha = norm, _beta = aux;
 }
 
 /**

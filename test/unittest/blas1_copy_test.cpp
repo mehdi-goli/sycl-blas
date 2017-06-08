@@ -1,9 +1,6 @@
 #include "blas1_test.hpp"
 
-typedef ::testing::Types<
-  blas_args<float>,
-  blas_args<double>
-> BlasTypes;
+typedef ::testing::Types<blas_args<float>, blas_args<double> > BlasTypes;
 
 TYPED_TEST_CASE(BLAS1_Test, BlasTypes);
 
@@ -20,6 +17,5 @@ B1_TEST(copy_test) {
     TO_VIEW(vY);
     _copy(ex, size, view_vX, 1, view_vY, 1);
   }
-  for (size_t i = 0; i < size; ++i)
-    ASSERT_EQ(vX[i], vY[i]);
+  for (size_t i = 0; i < size; ++i) ASSERT_EQ(vX[i], vY[i]);
 }

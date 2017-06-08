@@ -7,10 +7,14 @@
 #include <unistd.h>
 
 void set_seed() {
-  int fd=open("/dev/random", O_RDONLY);
-  if(fd==-1) abort();
-  unsigned seed,pos = 0;
-  while(pos<sizeof(seed)){int a=read(fd,(char*)&seed+pos,sizeof(seed)-pos);if(a<=0)abort();pos += a;}
+  int fd = open("/dev/random", O_RDONLY);
+  if (fd == -1) abort();
+  unsigned seed, pos = 0;
+  while (pos < sizeof(seed)) {
+    int a = read(fd, (char *)&seed + pos, sizeof(seed) - pos);
+    if (a <= 0) abort();
+    pos += a;
+  }
   srand(seed);
   close(fd);
 }

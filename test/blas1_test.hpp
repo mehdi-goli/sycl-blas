@@ -17,13 +17,23 @@ using namespace cl::sycl;
 using namespace blas;
 
 // sfinae for sample size
-template <typename C> struct option_size;
+template <typename C>
+struct option_size;
 #define RANDOM_SIZE UINT_MAX
-#define REGISTER_SIZE(size, test_class) template <> struct option_size<class test_class> { static constexpr const size_t value = size; };
+#define REGISTER_SIZE(size, test_class)         \
+  template <>                                   \
+  struct option_size<class test_class> {        \
+    static constexpr const size_t value = size; \
+  };
 
 // sfinae for precision registered for a type
-template <class T, typename C> struct option_prec;
-#define REGISTER_PREC(type, val, Test_Class) template <> struct option_prec<type, class Test_Class> { static constexpr const type value = val; };
+template <class T, typename C>
+struct option_prec;
+#define REGISTER_PREC(type, val, Test_Class)   \
+  template <>                                  \
+  struct option_prec<type, class Test_Class> { \
+    static constexpr const type value = val;   \
+  };
 
 // T = type, C = container, E = executor
 
@@ -31,7 +41,8 @@ template <class T, typename C> struct option_prec;
 template <class T, template <class... As> class C, class E>
 struct blas_templ_struct {
   using type = T;
-  template <class U = T> using container = C<U>;
+  template <class U = T>
+  using container = C<U>;
   using executor = E;
 };
 template <class T, template <class... As> class C = std::vector, class E = SYCL>
@@ -45,7 +56,8 @@ template <class T_, template <class... As> class C_, class E_>
 class BLAS1_Test<blas_args<T_, C_, E_>> : public ::testing::Test {
  public:
   using T = T_;
-  template <class U = T> using C = C_<U>;
+  template <class U = T>
+  using C = C_<U>;
   using E = E_;
 
   BLAS1_Test() {}
@@ -58,7 +70,9 @@ class BLAS1_Test<blas_args<T_, C_, E_>> : public ::testing::Test {
   static size_t rand_size() {
     size_t ret = rand() >> 5;
     int type_size = sizeof(U) * CHAR_BIT - std::numeric_limits<U>::digits10 - 2;
-    return (ret & (std::numeric_limits<size_t>::max() + (size_t(1) << (type_size - 2)))) + 1;
+    return (ret & (std::numeric_limits<size_t>::max() +
+                   (size_t(1) << (type_size - 2)))) +
+           1;
   }
 
   template <class U = T>
@@ -132,13 +146,15 @@ using TEST_B = BLAS1_Test<B>;
 
 // unpacking the parameters within the test function
 #define B1_TEST(name) TYPED_TEST(BLAS1_Test, name)
-#define UNPACK_PARAM(test_name)    \
-  using B = TypeParam;        \
-  using T = typename B::type; \
-  using _T = TEST_B<B>;       \
+#define UNPACK_PARAM(test_name)   \
+  using B = TypeParam;            \
+  using T = typename B::type;     \
+  using _T = TEST_B<B>;           \
   using E = typename B::executor; \
   using test = class test_name;
-#define TEST_SIZE ((option_size<test>::value == RANDOM_SIZE) ? test_size<_T>() : option_size<test>::value)
+#define TEST_SIZE                                              \
+  ((option_size<test>::value == RANDOM_SIZE) ? test_size<_T>() \
+                                             : option_size<test>::value)
 #define TEST_PREC option_prec<T, test>::value
 #define EXECUTE(name)        \
   auto q = _T::make_queue(); \

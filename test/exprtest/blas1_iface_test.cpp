@@ -1,8 +1,6 @@
 #include "blas_interface_test.hpp"
 
-typedef ::testing::Types<
-  blas_args<double>
-> BlasTypes;
+typedef ::testing::Types<blas_args<double>> BlasTypes;
 
 TYPED_TEST_CASE(BLAS1_Test, BlasTypes);
 
@@ -20,8 +18,9 @@ B1_TEST(interface1_test) {
        vY = _T::make_randcont(size, {-3, 1});
   Container<_T> vZ(size);
   Container<_T> vR(1), vS(1), vT(1), vU(1);
-  Container<_T, IndVal<T>> vImax(1, IndVal<T>(std::numeric_limits<size_t>::max(),
-                                             std::numeric_limits<T>::min())),
+  Container<_T, IndVal<T>> vImax(1,
+                                 IndVal<T>(std::numeric_limits<size_t>::max(),
+                                           std::numeric_limits<T>::min())),
       vImin(1, IndVal<T>(std::numeric_limits<size_t>::max(),
                          std::numeric_limits<T>::max()));
   size_t imax = 0, imin = 0;
@@ -63,11 +62,12 @@ B1_TEST(interface1_test) {
     _dot<E>(ex, size, view_vX, 1, view_vY, 1, view_vU);
     _swap<E>(ex, size, view_vX, 1, view_vY, 1);
   }
-  T prec_sample = std::max(std::numeric_limits<T>::epsilon() * size * 2, prec * T(1e1));
-  EXPECT_LE(prec_sample, prec*1e4);
+  T prec_sample =
+      std::max(std::numeric_limits<T>::epsilon() * size * 2, prec * T(1e1));
+  EXPECT_LE(prec_sample, prec * 1e4);
   std::cout << "prec==" << std::fixed
-            << std::setprecision(std::numeric_limits<T>::digits10) << prec_sample
-            << std::endl;
+            << std::setprecision(std::numeric_limits<T>::digits10)
+            << prec_sample << std::endl;
   EXPECT_NEAR(asum, vR[0], prec_sample);
   EXPECT_NEAR(dot, vS[0], prec_sample);
   EXPECT_NEAR(nrmY, vT[0], prec_sample);

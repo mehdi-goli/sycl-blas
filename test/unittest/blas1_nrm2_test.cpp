@@ -1,9 +1,6 @@
 #include "blas1_test.hpp"
 
-typedef ::testing::Types<
-  blas_args<float>,
-  blas_args<double>
-> BlasTypes;
+typedef ::testing::Types<blas_args<float>, blas_args<double> > BlasTypes;
 
 TYPED_TEST_CASE(BLAS1_Test, BlasTypes);
 

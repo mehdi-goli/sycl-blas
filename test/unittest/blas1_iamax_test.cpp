@@ -1,6 +1,6 @@
 #include "blas1_test.hpp"
 
-typedef ::testing::Types<blas_args<float>, blas_args<double>> BlasTypes;
+typedef ::testing::Types<blas1_test_args<float>, blas1_test_args<double>> BlasTypes;
 
 TYPED_TEST_CASE(BLAS1_Test, BlasTypes);
 
@@ -10,8 +10,8 @@ B1_TEST(iamax_test) {
   UNPACK_PARAM(iamax_test);
   size_t size = TEST_SIZE;
 
-  auto vX = _T::make_randcont(size);
-  Container<_T, IndVal<T>> vI(1, IndVal<T>(std::numeric_limits<size_t>::max(),
+  auto vX = TestClass::make_randcont(size);
+  Container<TestClass, IndVal<T>> vI(1, IndVal<T>(std::numeric_limits<size_t>::max(),
                                            std::numeric_limits<T>::min()));
 
   T max = 0.;

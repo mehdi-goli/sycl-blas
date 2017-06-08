@@ -1,6 +1,6 @@
-#include "blas_interface_test.hpp"
+#include "blas1_test.hpp"
 
-typedef ::testing::Types<blas_args<double>> BlasTypes;
+typedef ::testing::Types<blas1_test_args<double>> BlasTypes;
 
 TYPED_TEST_CASE(BLAS1_Test, BlasTypes);
 
@@ -14,11 +14,11 @@ B1_TEST(interface1_test) {
   T prec = TEST_PREC;
 
   std::cout << "size == " << size << std::endl;
-  auto vX = _T::make_randcont(size, {-1, 1}),
-       vY = _T::make_randcont(size, {-3, 1});
-  Container<_T> vZ(size);
-  Container<_T> vR(1), vS(1), vT(1), vU(1);
-  Container<_T, IndVal<T>> vImax(1,
+  auto vX = TestClass::make_randcont(size, {-1, 1}),
+       vY = TestClass::make_randcont(size, {-3, 1});
+  Container<TestClass> vZ(size);
+  Container<TestClass> vR(1), vS(1), vT(1), vU(1);
+  Container<TestClass, IndVal<T>> vImax(1,
                                  IndVal<T>(std::numeric_limits<size_t>::max(),
                                            std::numeric_limits<T>::min())),
       vImin(1, IndVal<T>(std::numeric_limits<size_t>::max(),

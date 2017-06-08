@@ -1,6 +1,6 @@
 #include "blas1_test.hpp"
 
-typedef ::testing::Types<blas_args<float>, blas_args<double> > BlasTypes;
+typedef ::testing::Types<blas1_test_args<float>, blas1_test_args<double> > BlasTypes;
 
 TYPED_TEST_CASE(BLAS1_Test, BlasTypes);
 
@@ -10,8 +10,8 @@ B1_TEST(copy_test) {
   UNPACK_PARAM(copy_test);
   size_t size = TEST_SIZE;
 
-  auto vX = _T::make_randcont(size);
-  Container<_T> vY(size);
+  auto vX = TestClass::make_randcont(size);
+  Container<TestClass> vY(size);
   EXECUTE(ex) {
     TO_VIEW(vX);
     TO_VIEW(vY);

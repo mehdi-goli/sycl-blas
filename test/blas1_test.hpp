@@ -16,7 +16,6 @@
 using namespace cl::sycl;
 using namespace blas;
 
-// sfinae for sample size
 template <typename C>
 struct option_size;
 #define RANDOM_SIZE UINT_MAX
@@ -25,8 +24,6 @@ struct option_size;
   struct option_size<class test_class> {        \
     static constexpr const size_t value = size; \
   };
-
-// sfinae for precision registered for a type
 template <class T, typename C>
 struct option_prec;
 #define REGISTER_PREC(type, val, Test_Class)   \
@@ -35,9 +32,15 @@ struct option_prec;
     static constexpr const type value = val;   \
   };
 
-// T = type, C = container, E = executor
+/*
+ * Template arguments:
+ * T = (scalar) type
+ * C = container
+ * E = executor
+ */
 
-// wrapper for the arguments
+// Wraps the above arguments into one template parameter.
+// We will treat template-specialized blas_templ_struct as a single class
 template <class T, template <class... As> class C, class E>
 struct blas_templ_struct {
   using type = T;
@@ -45,15 +48,15 @@ struct blas_templ_struct {
   using container = C<U>;
   using executor = E;
 };
+// A "using" shortcut for the struct
 template <class T, template <class... As> class C = std::vector, class E = SYCL>
-using blas_args = blas_templ_struct<T, C, E>;
+using blas1_test_args = blas_templ_struct<T, C, E>;
 
-//
-template <class B>
-class BLAS1_Test;
+// the test class itself
+template <class B> class BLAS1_Test;
 
 template <class T_, template <class... As> class C_, class E_>
-class BLAS1_Test<blas_args<T_, C_, E_>> : public ::testing::Test {
+class BLAS1_Test<blas1_test_args<T_, C_, E_>> : public ::testing::Test {
  public:
   using T = T_;
   template <class U = T>
@@ -123,44 +126,54 @@ class BLAS1_Test<blas_args<T_, C_, E_>> : public ::testing::Test {
 };
 
 // it is important that all tests are run with the same test size
-template <class _T>
+// so each time we access this function within the same program, we get the same
+// randomly generated size
+template <class TestClass>
 size_t test_size() {
-  /* return 1e6; */
-  using T = typename _T::T;
+  using T = typename TestClass::T;
   static bool first = true;
   static size_t N;
   if (first) {
     first = false;
-    N = _T::rand_size();
+    N = TestClass::rand_size();
   }
   return N;
 }
 
-// wrapping for google test
-
-template <class _T, class T = typename _T::T>
-using Container = typename _T::template C<T>;
-
-template <class B>
-using TEST_B = BLAS1_Test<B>;
+// templates the container type of the test class
+// TestClass - e.g. BLAS1_Test
+// T - element (or scalar) type, by default is TestClass::T
+template <class TestClass, class T = typename TestClass::T>
+using Container = typename TestClass::template C<T>;
 
 // unpacking the parameters within the test function
+// B is blas_templ_struct
+// TestClass is BLAS1_Test<B>
+// T is default (scalar) type for the test (e.g. float, double)
+// C is the container type for the test (e.g. std::vector)
+// E is the executor kind for the test (sequential, openmp, sycl)
 #define B1_TEST(name) TYPED_TEST(BLAS1_Test, name)
 #define UNPACK_PARAM(test_name)   \
   using B = TypeParam;            \
   using T = typename B::type;     \
-  using _T = TEST_B<B>;           \
+  using TestClass = BLAS1_Test<B>;           \
   using E = typename B::executor; \
   using test = class test_name;
+// TEST_SIZE determines the size based on the suggestion
 #define TEST_SIZE                                              \
-  ((option_size<test>::value == RANDOM_SIZE) ? test_size<_T>() \
+  ((option_size<test>::value == RANDOM_SIZE) ? test_size<TestClass>() \
                                              : option_size<test>::value)
+// TEST_PREC determines the precision for the test based on the suggestion for
+// the type
 #define TEST_PREC option_prec<T, test>::value
+// a shortcut for creating a queue and an executor of that queue
 #define EXECUTE(name)        \
-  auto q = _T::make_queue(); \
+  auto q = TestClass::make_queue(); \
   Executor<E> name(q);
+// a shortcut for creating a buffer from a vector and a vector_view from that
+// buffer
 #define TO_VIEW(name)                      \
-  auto buf_##name = _T::make_buffer(name); \
-  auto view_##name = _T::make_vview(buf_##name);
+  auto buf_##name = TestClass::make_buffer(name); \
+  auto view_##name = TestClass::make_vview(buf_##name);
 
 #endif

@@ -1,6 +1,6 @@
 #include "blas1_test.hpp"
 
-typedef ::testing::Types<blas_args<float>, blas_args<double> > BlasTypes;
+typedef ::testing::Types<blas1_test_args<float>, blas1_test_args<double> > BlasTypes;
 
 TYPED_TEST_CASE(BLAS1_Test, BlasTypes);
 
@@ -14,7 +14,7 @@ B1_TEST(asum_test) {
   size_t size = TEST_SIZE;
   T prec = TEST_PREC;
 
-  auto vX = _T::make_randcont(size), vR = Container<_T>(1, T(0));
+  auto vX = TestClass::make_randcont(size), vR = Container<TestClass>(1, T(0));
   T res(0);
   for (auto &x : vX) res += std::abs(x);
 

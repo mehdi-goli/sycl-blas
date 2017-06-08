@@ -1,6 +1,6 @@
 #include "blas1_test.hpp"
 
-typedef ::testing::Types<blas_args<float>, blas_args<double> > BlasTypes;
+typedef ::testing::Types<blas1_test_args<float>, blas1_test_args<double> > BlasTypes;
 
 TYPED_TEST_CASE(BLAS1_Test, BlasTypes);
 
@@ -15,8 +15,8 @@ B1_TEST(axpy_test) {
   T prec = TEST_PREC;
 
   T alpha((rand() % size * 1e2) * 1e-2);
-  auto vX = _T::make_randcont(size), vY = _T::make_randcont(size);
-  Container<_T> vZ(size, 0);
+  auto vX = TestClass::make_randcont(size), vY = TestClass::make_randcont(size);
+  Container<TestClass> vZ(size, 0);
   for (size_t i = 0; i < size; ++i) vZ[i] = alpha * vX[i] + vY[i];
 
   EXECUTE(ex) {

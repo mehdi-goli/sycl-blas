@@ -1,6 +1,7 @@
 #include "blas1_test.hpp"
 
-typedef ::testing::Types<blas1_test_args<float>, blas1_test_args<double> > BlasTypes;
+typedef ::testing::Types<blas1_test_args<float>, blas1_test_args<double> >
+    BlasTypes;
 
 TYPED_TEST_CASE(BLAS1_Test, BlasTypes);
 
@@ -17,17 +18,26 @@ B1_TEST(nrm2_simple_tests) {
 B1_TEST(nrm2_test) {
   UNPACK_PARAM(nrm2_test);
   size_t size = TEST_SIZE;
-  T prec = TEST_PREC;
+  ScalarT prec = TEST_PREC;
 
-  auto vX = TestClass::make_randcont(size), vR = Container<TestClass>(1, T(0));
-  T res(0);
+  std::vector<ScalarT> vX(size);
+  std::vector<ScalarT> vR(1, 0);
+  TestClass::set_rand(vX, size);
+
+  ScalarT res(0);
   for (size_t i = 0; i < size; ++i) res += vX[i] * vX[i];
   res = std::sqrt(res);
 
-  EXECUTE(ex) {
-    TO_VIEW(vX);
-    TO_VIEW(vR);
-    _nrm2(ex, size, view_vX, 1, view_vR);
+  for (auto &d : cl::sycl::device::get_devices()) {
+    auto q = TestClass::make_queue(d);
+    Executor<ExecutorType> ex(q);
+    {
+      auto buf_vX = TestClass::make_buffer(vX);
+      auto buf_vR = TestClass::make_buffer(vR);
+      auto view_vX = TestClass::make_vview(buf_vX);
+      auto view_vR = TestClass::make_vview(buf_vR);
+      _nrm2(ex, size, view_vX, 1, view_vR);
+    }
+    ASSERT_NEAR(res, vR[0], prec);
   }
-  ASSERT_NEAR(res, vR[0], prec);
 }

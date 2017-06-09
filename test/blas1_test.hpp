@@ -16,52 +16,43 @@
 using namespace cl::sycl;
 using namespace blas;
 
-template <typename C>
+template <typename ClassName>
 struct option_size;
 #define RANDOM_SIZE UINT_MAX
-#define REGISTER_SIZE(size, test_class)         \
+#define REGISTER_SIZE(size, test_name)          \
   template <>                                   \
-  struct option_size<class test_class> {        \
+  struct option_size<class test_name> {         \
     static constexpr const size_t value = size; \
   };
-template <class T, typename C>
+template <class ScalarT, typename ClassName>
 struct option_prec;
-#define REGISTER_PREC(type, val, Test_Class)   \
-  template <>                                  \
-  struct option_prec<type, class Test_Class> { \
-    static constexpr const type value = val;   \
+#define REGISTER_PREC(type, val, test_name)   \
+  template <>                                 \
+  struct option_prec<type, class test_name> { \
+    static constexpr const type value = val;  \
   };
-
-/*
- * Template arguments:
- * T = (scalar) type
- * C = container
- * E = executor
- */
 
 // Wraps the above arguments into one template parameter.
 // We will treat template-specialized blas_templ_struct as a single class
-template <class T, template <class... As> class C, class E>
+template <class ScalarT_, class ExecutorType_>
 struct blas_templ_struct {
-  using type = T;
-  template <class U = T>
-  using container = C<U>;
-  using executor = E;
+  using scalar_t = ScalarT_;
+  using executor_t = ExecutorType_;
 };
 // A "using" shortcut for the struct
-template <class T, template <class... As> class C = std::vector, class E = SYCL>
-using blas1_test_args = blas_templ_struct<T, C, E>;
+template <class ScalarT_, class ExecutorType_ = SYCL>
+using blas1_test_args = blas_templ_struct<ScalarT_, ExecutorType_>;
 
 // the test class itself
-template <class B> class BLAS1_Test;
+template <class B>
+class BLAS1_Test;
 
-template <class T_, template <class... As> class C_, class E_>
-class BLAS1_Test<blas1_test_args<T_, C_, E_>> : public ::testing::Test {
+template <class ScalarT_, class ExecutorType_>
+class BLAS1_Test<blas1_test_args<ScalarT_, ExecutorType_>>
+    : public ::testing::Test {
  public:
-  using T = T_;
-  template <class U = T>
-  using C = C_<U>;
-  using E = E_;
+  using ScalarT = ScalarT_;
+  using ExecutorType = ExecutorType_;
 
   BLAS1_Test() {}
 
@@ -69,51 +60,50 @@ class BLAS1_Test<blas1_test_args<T_, C_, E_>> : public ::testing::Test {
   virtual void SetUp() {}
   virtual void TearDown() {}
 
-  template <class U = T>
   static size_t rand_size() {
     size_t ret = rand() >> 5;
-    int type_size = sizeof(U) * CHAR_BIT - std::numeric_limits<U>::digits10 - 2;
+    int type_size =
+        sizeof(ScalarT) * CHAR_BIT - std::numeric_limits<ScalarT>::digits10 - 2;
     return (ret & (std::numeric_limits<size_t>::max() +
                    (size_t(1) << (type_size - 2)))) +
            1;
   }
 
-  template <class U = T>
-  static void set_rand(C<U> &vec, std::pair<U, U> &bounds) {
-    for (auto &x : vec) {
-      x = U(rand() % int(bounds.first - bounds.second) * 1000) * .001 -
-          bounds.second;
+  template <typename DataType,
+            typename ValueType = typename DataType::value_type>
+  static void set_rand(DataType &vec, size_t _N) {
+    ValueType left(-1), right(1);
+    for (size_t i = 0; i < _N; ++i) {
+      vec[i] = ValueType(rand() % int(right - left) * 1000) * .001 - right;
     }
   }
 
-  template <class U = T>
-  static C<U> make_randcont(size_t size, std::pair<U, U> &&bounds = {-1, 1}) {
-    C<U> container(size);
-    set_rand(container, bounds);
-    return container;
-  }
-
-  template <class U = T>
-  static void print_cont(const C<U> &vec, std::string name = "vector") {
+  template <typename DataType,
+            typename ValueType = typename DataType::value_type>
+  static void print_cont(const DataType &vec, size_t _N,
+                         std::string name = "vector") {
     std::cout << name << ": ";
-    for (auto &e : vec) std::cout << e << " ";
+    for (size_t i = 0; i < _N; ++i) std::cout << vec[i] << " ";
     std::cout << std::endl;
   }
 
-  template <class U = T>
-  static buffer<U, 1> make_buffer(C<U> &vec) {
-    return buffer<U, 1>(vec.data(), vec.size());
+  template <typename DataType,
+            typename ValueType = typename DataType::value_type>
+  static buffer<ValueType, 1> make_buffer(DataType &vec) {
+    return buffer<ValueType, 1>(vec.data(), vec.size());
   }
 
-  template <class U = T>
-  static vector_view<U, buffer<U>> make_vview(buffer<U, 1> &buf) {
-    return vector_view<U, buffer<U>>(buf);
+  template <typename ValueType>
+  static vector_view<ValueType, buffer<ValueType>> make_vview(
+      buffer<ValueType, 1> &buf) {
+    return vector_view<ValueType, buffer<ValueType>>(buf);
   }
 
-  template <
-      typename = typename std::enable_if<std::is_same<E, SYCL>::value>::type>
-  static cl::sycl::queue make_queue() {
-    return cl::sycl::queue([=](cl::sycl::exception_list eL) {
+  template <typename DeviceSelector,
+            typename = typename std::enable_if<
+                std::is_same<ExecutorType, SYCL>::value>::type>
+  static cl::sycl::queue make_queue(DeviceSelector s) {
+    return cl::sycl::queue(s, [=](cl::sycl::exception_list eL) {
       try {
         for (auto &e : eL) std::rethrow_exception(e);
       } catch (cl::sycl::exception &e) {
@@ -130,7 +120,7 @@ class BLAS1_Test<blas1_test_args<T_, C_, E_>> : public ::testing::Test {
 // randomly generated size
 template <class TestClass>
 size_t test_size() {
-  using T = typename TestClass::T;
+  using ScalarT = typename TestClass::ScalarT;
   static bool first = true;
   static size_t N;
   if (first) {
@@ -140,12 +130,6 @@ size_t test_size() {
   return N;
 }
 
-// templates the container type of the test class
-// TestClass - e.g. BLAS1_Test
-// T - element (or scalar) type, by default is TestClass::T
-template <class TestClass, class T = typename TestClass::T>
-using Container = typename TestClass::template C<T>;
-
 // unpacking the parameters within the test function
 // B is blas_templ_struct
 // TestClass is BLAS1_Test<B>
@@ -153,27 +137,17 @@ using Container = typename TestClass::template C<T>;
 // C is the container type for the test (e.g. std::vector)
 // E is the executor kind for the test (sequential, openmp, sycl)
 #define B1_TEST(name) TYPED_TEST(BLAS1_Test, name)
-#define UNPACK_PARAM(test_name)   \
-  using B = TypeParam;            \
-  using T = typename B::type;     \
-  using TestClass = BLAS1_Test<B>;           \
-  using E = typename B::executor; \
+#define UNPACK_PARAM(test_name)                        \
+  using ScalarT = typename TypeParam::scalar_t;        \
+  using TestClass = BLAS1_Test<TypeParam>;             \
+  using ExecutorType = typename TypeParam::executor_t; \
   using test = class test_name;
 // TEST_SIZE determines the size based on the suggestion
-#define TEST_SIZE                                              \
+#define TEST_SIZE                                                     \
   ((option_size<test>::value == RANDOM_SIZE) ? test_size<TestClass>() \
                                              : option_size<test>::value)
 // TEST_PREC determines the precision for the test based on the suggestion for
 // the type
-#define TEST_PREC option_prec<T, test>::value
-// a shortcut for creating a queue and an executor of that queue
-#define EXECUTE(name)        \
-  auto q = TestClass::make_queue(); \
-  Executor<E> name(q);
-// a shortcut for creating a buffer from a vector and a vector_view from that
-// buffer
-#define TO_VIEW(name)                      \
-  auto buf_##name = TestClass::make_buffer(name); \
-  auto view_##name = TestClass::make_vview(buf_##name);
+#define TEST_PREC option_prec<ScalarT, test>::value
 
 #endif

@@ -26,9 +26,17 @@ int main(int argc, char *argv[]) {
   }
   if (returnVal == 0) {
     // CREATING DATA
-    std::vector<double> vX(sizeV, 1.);
-    std::vector<double> vY(sizeV, 1.);
+    std::vector<double> vX(sizeV);
+    std::vector<double> vY(sizeV);
     double sum = 0.0f;
+
+    // INITIALIZING DATA
+    std::for_each(std::begin(vX), std::end(vX),
+                  [&](double &elem) { elem = 1.0;  });
+
+    std::for_each(std::begin(vY), std::end(vY),
+                  [&](double &elem) { elem = 1.0;  });
+
 
     // CREATING THE SYCL QUEUE AND EXECUTOR
     cl::sycl::queue q([=](cl::sycl::exception_list eL) {

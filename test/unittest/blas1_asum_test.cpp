@@ -32,6 +32,5 @@ B1_TEST(asum_test) {
       _asum(ex, size, view_vX, 1, view_vR);
     }
     ASSERT_NEAR(res, vR[0], prec);
-    std::cout << "success" << std::endl;
   }
 }

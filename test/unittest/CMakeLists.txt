@@ -12,6 +12,7 @@ file(GLOB SYCL_UNITTEST_SRCS
   ${SYCLBLAS_UNITTEST}/blas1_copy_test.cpp
   ${SYCLBLAS_UNITTEST}/blas1_swap_test.cpp
   ${SYCLBLAS_UNITTEST}/blas1_axpy_test.cpp
+  ${SYCLBLAS_UNITTEST}/blas1_scal_test.cpp
   ${SYCLBLAS_UNITTEST}/blas1_asum_test.cpp
   ${SYCLBLAS_UNITTEST}/blas1_dot_test.cpp
   ${SYCLBLAS_UNITTEST}/blas1_nrm2_test.cpp

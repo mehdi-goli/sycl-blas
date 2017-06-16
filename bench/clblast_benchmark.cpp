@@ -143,316 +143,322 @@ class MemBuffer {
 
 #define UNPACK_PARAM         \
   using ScalarT = TypeParam; \
-  Context context;           \
-  context.create();          \
   cl_event event = NULL;
 
-BENCHMARK_FUNCTION(copy_bench) {
-  UNPACK_PARAM;
-  benchmark<>::time_units_t ms;
-  {
-    MemBuffer<ScalarT> buf1(size);
-    MemBuffer<ScalarT> buf2(size, false);
+class ClBlastBenchmarker {
+  Context context;
 
-    buf1.send(context);
-    buf2.create(context);
+ public:
+  ClBlastBenchmarker() : context() { context.create(); }
 
-    clblast::Copy<ScalarT>(size, buf1.dev(), 0, 1, buf2.dev(), 0, 1,
-                           context._queue(), &event);
-    clWaitForEvents(1, &event);
-    clReleaseEvent(event);
+  BENCHMARK_FUNCTION(copy_bench) {
+    UNPACK_PARAM;
+    benchmark<>::time_units_t ms;
+    {
+      MemBuffer<ScalarT> buf1(size);
+      MemBuffer<ScalarT> buf2(size, false);
 
-    ms = benchmark<>::duration(no_reps, [&]() {
+      buf1.send(context);
+      buf2.create(context);
+
       clblast::Copy<ScalarT>(size, buf1.dev(), 0, 1, buf2.dev(), 0, 1,
                              context._queue(), &event);
       clWaitForEvents(1, &event);
       clReleaseEvent(event);
-    });
 
-    buf1.read(context), buf2.read(context);
+      ms = benchmark<>::duration(no_reps, [&]() {
+        clblast::Copy<ScalarT>(size, buf1.dev(), 0, 1, buf2.dev(), 0, 1,
+                               context._queue(), &event);
+        clWaitForEvents(1, &event);
+        clReleaseEvent(event);
+      });
+
+      buf1.read(context), buf2.read(context);
+    }
+    return ms;
   }
-  return ms;
-}
 
-BENCHMARK_FUNCTION(swap_bench) {
-  UNPACK_PARAM;
-  benchmark<>::time_units_t ms;
-  {
-    MemBuffer<ScalarT> buf1(size);
-    MemBuffer<ScalarT> buf2(size);
+  BENCHMARK_FUNCTION(swap_bench) {
+    UNPACK_PARAM;
+    benchmark<>::time_units_t ms;
+    {
+      MemBuffer<ScalarT> buf1(size);
+      MemBuffer<ScalarT> buf2(size);
 
-    buf1.send(context);
-    buf2.send(context);
+      buf1.send(context);
+      buf2.send(context);
 
-    ms = benchmark<>::duration(no_reps, [&]() {
-      clblast::Swap<ScalarT>(size, buf1.dev(), 0, 1, buf2.dev(), 0, 1,
-                             context._queue(), &event);
-      clWaitForEvents(1, &event);
-      clReleaseEvent(event);
-    });
+      ms = benchmark<>::duration(no_reps, [&]() {
+        clblast::Swap<ScalarT>(size, buf1.dev(), 0, 1, buf2.dev(), 0, 1,
+                               context._queue(), &event);
+        clWaitForEvents(1, &event);
+        clReleaseEvent(event);
+      });
 
-    buf1.read(context), buf2.read(context);
+      buf1.read(context), buf2.read(context);
+    }
+    return ms;
   }
-  return ms;
-}
 
-BENCHMARK_FUNCTION(scal_bench) {
-  UNPACK_PARAM;
-  benchmark<>::time_units_t ms;
-  {
-    ScalarT alpha(2.44566723436);
-    MemBuffer<ScalarT> buf1(size);
+  BENCHMARK_FUNCTION(scal_bench) {
+    UNPACK_PARAM;
+    benchmark<>::time_units_t ms;
+    {
+      ScalarT alpha(2.44566723436);
+      MemBuffer<ScalarT> buf1(size);
 
-    buf1.send(context);
+      buf1.send(context);
 
-    ms = benchmark<>::duration(no_reps, [&]() {
-      clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(),
-                             &event);
-      clWaitForEvents(1, &event);
-      clReleaseEvent(event);
-    });
+      ms = benchmark<>::duration(no_reps, [&]() {
+        clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(),
+                               &event);
+        clWaitForEvents(1, &event);
+        clReleaseEvent(event);
+      });
 
-    buf1.read(context);
+      buf1.read(context);
+    }
+    return ms;
   }
-  return ms;
-}
 
-BENCHMARK_FUNCTION(axpy_bench) {
-  UNPACK_PARAM;
-  benchmark<>::time_units_t ms;
-  {
-    ScalarT alpha(2.44566723436);
-    MemBuffer<ScalarT> buf1(size);
-    MemBuffer<ScalarT> buf2(size);
+  BENCHMARK_FUNCTION(axpy_bench) {
+    UNPACK_PARAM;
+    benchmark<>::time_units_t ms;
+    {
+      ScalarT alpha(2.44566723436);
+      MemBuffer<ScalarT> buf1(size);
+      MemBuffer<ScalarT> buf2(size);
 
-    buf1.send(context);
-    buf2.send(context);
+      buf1.send(context);
+      buf2.send(context);
 
-    ms = benchmark<>::duration(no_reps, [&]() {
-      clblast::Axpy<ScalarT>(size, alpha, buf1.dev(), 0, 1, buf2.dev(), 0, 1,
-                             context._queue(), &event);
-      clWaitForEvents(1, &event);
-      clReleaseEvent(event);
-    });
+      ms = benchmark<>::duration(no_reps, [&]() {
+        clblast::Axpy<ScalarT>(size, alpha, buf1.dev(), 0, 1, buf2.dev(), 0, 1,
+                               context._queue(), &event);
+        clWaitForEvents(1, &event);
+        clReleaseEvent(event);
+      });
 
-    buf1.read(context), buf2.read(context);
+      buf1.read(context), buf2.read(context);
+    }
+    return ms;
   }
-  return ms;
-}
 
-BENCHMARK_FUNCTION(asum_bench) {
-  UNPACK_PARAM;
-  benchmark<>::time_units_t ms;
-  {
-    ScalarT vr;
-    MemBuffer<ScalarT> buf1(size);
-    MemBuffer<ScalarT> bufr(&vr, 1);
+  BENCHMARK_FUNCTION(asum_bench) {
+    UNPACK_PARAM;
+    benchmark<>::time_units_t ms;
+    {
+      ScalarT vr;
+      MemBuffer<ScalarT> buf1(size);
+      MemBuffer<ScalarT> bufr(&vr, 1);
 
-    buf1.send(context);
-    bufr.create(context);
+      buf1.send(context);
+      bufr.create(context);
 
-    ms = benchmark<>::duration(no_reps, [&]() {
-      clblast::Asum<ScalarT>(size, bufr.dev(), 0, buf1.dev(), 0, 1,
-                             context._queue(), &event);
-      clWaitForEvents(1, &event);
-      clReleaseEvent(event);
-    });
+      ms = benchmark<>::duration(no_reps, [&]() {
+        clblast::Asum<ScalarT>(size, bufr.dev(), 0, buf1.dev(), 0, 1,
+                               context._queue(), &event);
+        clWaitForEvents(1, &event);
+        clReleaseEvent(event);
+      });
 
-    buf1.read(context), bufr.read(context);
+      buf1.read(context), bufr.read(context);
+    }
+    return ms;
   }
-  return ms;
-}
 
-BENCHMARK_FUNCTION(nrm2_bench) {
-  UNPACK_PARAM;
-  benchmark<>::time_units_t ms;
-  {
-    ScalarT vr;
-    MemBuffer<ScalarT> buf1(size);
-    MemBuffer<ScalarT> bufr(&vr, 1);
+  BENCHMARK_FUNCTION(nrm2_bench) {
+    UNPACK_PARAM;
+    benchmark<>::time_units_t ms;
+    {
+      ScalarT vr;
+      MemBuffer<ScalarT> buf1(size);
+      MemBuffer<ScalarT> bufr(&vr, 1);
 
-    buf1.send(context);
-    bufr.create(context);
+      buf1.send(context);
+      bufr.create(context);
 
-    ms = benchmark<>::duration(no_reps, [&]() {
-      clblast::Nrm2<ScalarT>(size, bufr.dev(), 0, buf1.dev(), 0, 1,
-                             context._queue(), &event);
-      clWaitForEvents(1, &event);
-      clReleaseEvent(event);
-    });
+      ms = benchmark<>::duration(no_reps, [&]() {
+        clblast::Nrm2<ScalarT>(size, bufr.dev(), 0, buf1.dev(), 0, 1,
+                               context._queue(), &event);
+        clWaitForEvents(1, &event);
+        clReleaseEvent(event);
+      });
 
-    buf1.read(context), bufr.read(context);
+      buf1.read(context), bufr.read(context);
+    }
+    return ms;
   }
-  return ms;
-}
 
-BENCHMARK_FUNCTION(dot_bench) {
-  UNPACK_PARAM;
-  benchmark<>::time_units_t ms;
-  {
-    ScalarT vr;
-    MemBuffer<ScalarT> buf1(size);
-    MemBuffer<ScalarT> buf2(size);
-    MemBuffer<ScalarT> bufr(&vr, 1);
+  BENCHMARK_FUNCTION(dot_bench) {
+    UNPACK_PARAM;
+    benchmark<>::time_units_t ms;
+    {
+      ScalarT vr;
+      MemBuffer<ScalarT> buf1(size);
+      MemBuffer<ScalarT> buf2(size);
+      MemBuffer<ScalarT> bufr(&vr, 1);
 
-    buf1.send(context);
-    buf2.send(context);
-    bufr.create(context);
+      buf1.send(context);
+      buf2.send(context);
+      bufr.create(context);
 
-    ms = benchmark<>::duration(no_reps, [&]() {
-      clblast::Dot<ScalarT>(size, bufr.dev(), 0, buf1.dev(), 0, 1, buf2.dev(),
-                            0, 1, context._queue(), &event);
-      clWaitForEvents(1, &event);
-      clReleaseEvent(event);
-    });
+      ms = benchmark<>::duration(no_reps, [&]() {
+        clblast::Dot<ScalarT>(size, bufr.dev(), 0, buf1.dev(), 0, 1, buf2.dev(),
+                              0, 1, context._queue(), &event);
+        clWaitForEvents(1, &event);
+        clReleaseEvent(event);
+      });
 
-    buf1.read(context);
-    buf2.read(context);
-    bufr.read(context);
+      buf1.read(context);
+      buf2.read(context);
+      bufr.read(context);
+    }
+    return ms;
   }
-  return ms;
-}
 
-BENCHMARK_FUNCTION(iamax_bench) {
-  UNPACK_PARAM;
-  benchmark<>::time_units_t ms;
-  {
-    int vi;
-    MemBuffer<ScalarT> buf1(size);
-    MemBuffer<int> buf_i(&vi, 1);
+  BENCHMARK_FUNCTION(iamax_bench) {
+    UNPACK_PARAM;
+    benchmark<>::time_units_t ms;
+    {
+      int vi;
+      MemBuffer<ScalarT> buf1(size);
+      MemBuffer<int> buf_i(&vi, 1);
 
-    buf1.send(context);
-    buf_i.create(context);
+      buf1.send(context);
+      buf_i.create(context);
 
-    ms = benchmark<>::duration(no_reps, [&]() {
-      clblast::Amax<ScalarT>(size, buf_i.dev(), 0, buf1.dev(), 0, 1,
-                             context._queue(), &event);
-      clWaitForEvents(1, &event);
-      clReleaseEvent(event);
-    });
+      ms = benchmark<>::duration(no_reps, [&]() {
+        clblast::Amax<ScalarT>(size, buf_i.dev(), 0, buf1.dev(), 0, 1,
+                               context._queue(), &event);
+        clWaitForEvents(1, &event);
+        clReleaseEvent(event);
+      });
 
-    buf1.read(context);
-    buf_i.read(context);
+      buf1.read(context);
+      buf_i.read(context);
+    }
+    return ms;
   }
-  return ms;
-}
 
-// not supported at current release yet
-/* BENCHMARK_FUNCTION(iamin_bench) { */
-/*   UNPACK_PARAM; */
-/*   benchmark<>::time_units_t ms; */
-/*   { */
-/*     int vi; */
-/*     MemBuffer<ScalarT> buf1(size); */
-/*     MemBuffer<int> buf_i(&vi, 1); */
+  // not supported at current release yet
+  /* BENCHMARK_FUNCTION(iamin_bench) { */
+  /*   UNPACK_PARAM; */
+  /*   benchmark<>::time_units_t ms; */
+  /*   { */
+  /*     int vi; */
+  /*     MemBuffer<ScalarT> buf1(size); */
+  /*     MemBuffer<int> buf_i(&vi, 1); */
 
-/*     buf1.create(context); */
-/*     buf_i.create(context); */
-/*     buf1.send(context); */
+  /*     buf1.create(context); */
+  /*     buf_i.create(context); */
+  /*     buf1.send(context); */
 
-/*     ms = benchmark<>::duration(no_reps, [&]() { */
-/*       clblast::Amin<ScalarT>(size, buf_i.dev(), 0, buf1.dev(), 0, 1, */
-/*                               context._queue(), &event); */
-/*       clWaitForEvents(1, &event); */
-/*       clReleaseEvent(event); */
-/*     }); */
+  /*     ms = benchmark<>::duration(no_reps, [&]() { */
+  /*       clblast::Amin<ScalarT>(size, buf_i.dev(), 0, buf1.dev(), 0, 1, */
+  /*                               context._queue(), &event); */
+  /*       clWaitForEvents(1, &event); */
+  /*       clReleaseEvent(event); */
+  /*     }); */
 
-/*     buf1.read(context), buf_i.read(context); */
-/*   } */
-/*   return ms; */
-/* } */
+  /*     buf1.read(context), buf_i.read(context); */
+  /*   } */
+  /*   return ms; */
+  /* } */
 
-BENCHMARK_FUNCTION(scal2op_bench) {
-  UNPACK_PARAM;
-  benchmark<>::time_units_t ms;
-  {
-    ScalarT alpha(2.4463234132);
-    MemBuffer<ScalarT> buf1(size);
-    MemBuffer<ScalarT> buf2(size);
+  BENCHMARK_FUNCTION(scal2op_bench) {
+    UNPACK_PARAM;
+    benchmark<>::time_units_t ms;
+    {
+      ScalarT alpha(2.4463234132);
+      MemBuffer<ScalarT> buf1(size);
+      MemBuffer<ScalarT> buf2(size);
 
-    buf1.send(context);
-    buf2.send(context);
+      buf1.send(context);
+      buf2.send(context);
 
-    ms = benchmark<>::duration(no_reps, [&]() {
-      clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(),
-                             &event);
-      clblast::Scal<ScalarT>(size, alpha, buf2.dev(), 0, 1, context._queue(),
-                             &event);
-    });
+      ms = benchmark<>::duration(no_reps, [&]() {
+        clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(),
+                               &event);
+        clblast::Scal<ScalarT>(size, alpha, buf2.dev(), 0, 1, context._queue(),
+                               &event);
+      });
 
-    buf1.read(context);
-    buf2.read(context);
+      buf1.read(context);
+      buf2.read(context);
+    }
+    return ms;
   }
-  return ms;
-}
 
-BENCHMARK_FUNCTION(scal3op_bench) {
-  UNPACK_PARAM;
-  benchmark<>::time_units_t ms;
-  {
-    ScalarT alpha(2.4463234132);
-    MemBuffer<ScalarT> buf1(size);
-    MemBuffer<ScalarT> buf2(size);
-    MemBuffer<ScalarT> buf3(size);
+  BENCHMARK_FUNCTION(scal3op_bench) {
+    UNPACK_PARAM;
+    benchmark<>::time_units_t ms;
+    {
+      ScalarT alpha(2.4463234132);
+      MemBuffer<ScalarT> buf1(size);
+      MemBuffer<ScalarT> buf2(size);
+      MemBuffer<ScalarT> buf3(size);
 
-    buf1.send(context);
-    buf2.send(context);
-    buf3.send(context);
+      buf1.send(context);
+      buf2.send(context);
+      buf3.send(context);
 
-    ms = benchmark<>::duration(no_reps, [&]() {
-      clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(),
-                             &event);
-      clblast::Scal<ScalarT>(size, alpha, buf2.dev(), 0, 1, context._queue(),
-                             &event);
-    });
+      ms = benchmark<>::duration(no_reps, [&]() {
+        clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(),
+                               &event);
+        clblast::Scal<ScalarT>(size, alpha, buf2.dev(), 0, 1, context._queue(),
+                               &event);
+      });
 
-    buf1.read(context);
-    buf2.read(context);
-    buf3.read(context);
+      buf1.read(context);
+      buf2.read(context);
+      buf3.read(context);
+    }
+    return ms;
   }
-  return ms;
-}
 
-BENCHMARK_FUNCTION(blas1_bench) {
-  UNPACK_PARAM;
-  benchmark<>::time_units_t ms;
-  {
-    ScalarT alpha(2.4463234132);
-    MemBuffer<ScalarT> buf1(size);
-    MemBuffer<ScalarT> buf2(size);
-    ScalarT vr[4];
-    size_t vi;
-    MemBuffer<ScalarT> bufr(vr, 4);
-    MemBuffer<size_t> buf_i(&vi, 1);
+  BENCHMARK_FUNCTION(blas1_bench) {
+    UNPACK_PARAM;
+    benchmark<>::time_units_t ms;
+    {
+      ScalarT alpha(2.4463234132);
+      MemBuffer<ScalarT> buf1(size);
+      MemBuffer<ScalarT> buf2(size);
+      ScalarT vr[4];
+      size_t vi;
+      MemBuffer<ScalarT> bufr(vr, 4);
+      MemBuffer<size_t> buf_i(&vi, 1);
 
-    buf1.send(context);
-    buf2.send(context);
-    bufr.create(context);
-    buf_i.create(context);
+      buf1.send(context);
+      buf2.send(context);
+      bufr.create(context);
+      buf_i.create(context);
 
-    ms = benchmark<>::duration(no_reps, [&]() {
-      clblast::Axpy<ScalarT>(size, alpha, buf1.dev(), 0, 1, buf2.dev(), 0, 1,
-                             context._queue(), &event);
-      clblast::Asum<ScalarT>(size, bufr.dev(), 0, buf2.dev(), 0, 1,
-                             context._queue(), &event);
-      clblast::Dot<ScalarT>(size, bufr.dev(), 1, buf1.dev(), 0, 1, buf2.dev(),
-                            0, 1, context._queue(), &event);
-      clblast::Nrm2<ScalarT>(size, bufr.dev(), 2, buf1.dev(), 0, 1,
-                             context._queue(), &event);
-      clblast::Amax<ScalarT>(size, buf_i.dev(), 0, buf1.dev(), 0, 1,
-                             context._queue(), &event);
-      clblast::Swap<ScalarT>(size, buf1.dev(), 0, 1, buf2.dev(), 0, 1,
-                             context._queue(), &event);
-    });
-    buf1.read(context);
-    buf2.read(context);
-    bufr.read(context);
-    buf_i.read(context);
+      ms = benchmark<>::duration(no_reps, [&]() {
+        clblast::Axpy<ScalarT>(size, alpha, buf1.dev(), 0, 1, buf2.dev(), 0, 1,
+                               context._queue(), &event);
+        clblast::Asum<ScalarT>(size, bufr.dev(), 0, buf2.dev(), 0, 1,
+                               context._queue(), &event);
+        clblast::Dot<ScalarT>(size, bufr.dev(), 1, buf1.dev(), 0, 1, buf2.dev(),
+                              0, 1, context._queue(), &event);
+        clblast::Nrm2<ScalarT>(size, bufr.dev(), 2, buf1.dev(), 0, 1,
+                               context._queue(), &event);
+        clblast::Amax<ScalarT>(size, buf_i.dev(), 0, buf1.dev(), 0, 1,
+                               context._queue(), &event);
+        clblast::Swap<ScalarT>(size, buf1.dev(), 0, 1, buf2.dev(), 0, 1,
+                               context._queue(), &event);
+      });
+      buf1.read(context);
+      buf2.read(context);
+      bufr.read(context);
+      buf_i.read(context);
+    }
+    return ms;
   }
-  return ms;
-}
+};
 
 BENCHMARK_MAIN_BEGIN(1 << 1, 1 << 24, 10);
+ClBlastBenchmarker blasbenchmark;
 
 /* BENCHMARK_FLOPS(0); */
 /* BENCHMARK_REGISTER_FUNCTION("copy_float", copy_bench<float>); */

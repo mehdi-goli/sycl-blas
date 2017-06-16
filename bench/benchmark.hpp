@@ -99,7 +99,7 @@ struct benchmark {
 #define BENCHMARK_REGISTER_FUNCTION(NAME, FUNCTION)                          \
   for (size_t nelems = step_size; nelems < max_elems; nelems *= step_size) { \
     const std::string short_name = NAME;                                     \
-    auto time = FUNCTION(num_reps, nelems);                                  \
+    auto time = blasbenchmark.FUNCTION(num_reps, nelems);                    \
     benchmark<>::output_data(short_name, nelems, num_reps, op_flops * 1,     \
                              time);                                          \
   }

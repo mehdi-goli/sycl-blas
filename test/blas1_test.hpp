@@ -19,17 +19,25 @@ using namespace blas;
 template <typename ClassName>
 struct option_size;
 #define RANDOM_SIZE UINT_MAX
+#define RANDOM_STRD UINT_MAX
 #define REGISTER_SIZE(size, test_name)          \
   template <>                                   \
   struct option_size<class test_name> {         \
     static constexpr const size_t value = size; \
   };
-template <class ScalarT, typename ClassName>
+template <typename ClassName>
+struct option_strd;
+#define REGISTER_STRD(strd, test_name)          \
+  template <>                                   \
+  struct option_strd<class test_name> {         \
+    static constexpr const size_t value = strd; \
+  };
+template <typename ScalarT, typename ClassName>
 struct option_prec;
-#define REGISTER_PREC(type, val, test_name)   \
-  template <>                                 \
-  struct option_prec<type, class test_name> { \
-    static constexpr const type value = val;  \
+#define REGISTER_PREC(type, val, test_name)     \
+  template <>                                   \
+  struct option_prec<type, class test_name> {   \
+    static constexpr const type value = val;    \
   };
 
 // Wraps the above arguments into one template parameter.
@@ -120,12 +128,23 @@ class BLAS1_Test<blas1_test_args<ScalarT_, ExecutorType_>>
 // randomly generated size
 template <class TestClass>
 size_t test_size() {
-  using ScalarT = typename TestClass::ScalarT;
   static bool first = true;
   static size_t N;
   if (first) {
     first = false;
     N = TestClass::rand_size();
+  }
+  return N;
+}
+
+// getting the stride in the same way as the size above
+template <class TestClass>
+size_t test_strd() {
+  static bool first = true;
+  static size_t N;
+  if(first) {
+    first = false;
+    N = ((rand() & 1) * (rand() % 5)) + 1;
   }
   return N;
 }
@@ -146,6 +165,9 @@ size_t test_size() {
 #define TEST_SIZE                                                     \
   ((option_size<test>::value == RANDOM_SIZE) ? test_size<TestClass>() \
                                              : option_size<test>::value)
+#define TEST_STRD                                                     \
+  ((option_strd<test>::value == RANDOM_SIZE) ? test_strd<TestClass>() \
+                                             : option_strd<test>::value)
 // TEST_PREC determines the precision for the test based on the suggestion for
 // the type
 #define TEST_PREC option_prec<ScalarT, test>::value

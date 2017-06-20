@@ -6,10 +6,12 @@ typedef ::testing::Types<blas1_test_args<float>, blas1_test_args<double> >
 TYPED_TEST_CASE(BLAS1_Test, BlasTypes);
 
 REGISTER_SIZE(RANDOM_SIZE, swap_test)
+REGISTER_STRD(RANDOM_STRD, swap_test)
 
 B1_TEST(swap_test) {
   UNPACK_PARAM(swap_test);
   size_t size = TEST_SIZE;
+  size_t strd = TEST_STRD;
 
   std::vector<ScalarT> vX(size);
   std::vector<ScalarT> vY(size);
@@ -25,7 +27,6 @@ B1_TEST(swap_test) {
 
   bool swap_checker_mode = false;
   for (auto &d : cl::sycl::device::get_devices()) {
-    swap_checker_mode = !swap_checker_mode;
     auto q = TestClass::make_queue(d);
     Executor<ExecutorType> ex(q);
     {
@@ -33,16 +34,22 @@ B1_TEST(swap_test) {
       auto buf_vY = TestClass::make_buffer(vY);
       auto view_vX = TestClass::make_vview(buf_vX);
       auto view_vY = TestClass::make_vview(buf_vY);
-      _swap(ex, size, view_vX, 1, view_vY, 1);
+      _swap(ex, size, view_vX, strd, view_vY, strd);
     }
     for (size_t i = 0; i < size; ++i) {
-      if (swap_checker_mode) {
-        ASSERT_EQ(vZ[i], vY[i]);
-        ASSERT_EQ(vT[i], vX[i]);
+      if(i % strd == 0) {
+        if (swap_checker_mode) {
+          ASSERT_EQ(vZ[i], vX[i]);
+          ASSERT_EQ(vT[i], vY[i]);
+        } else {
+          ASSERT_EQ(vZ[i], vY[i]);
+          ASSERT_EQ(vT[i], vX[i]);
+        }
       } else {
         ASSERT_EQ(vZ[i], vX[i]);
         ASSERT_EQ(vT[i], vY[i]);
       }
     }
+    swap_checker_mode = !swap_checker_mode;
   }
 }

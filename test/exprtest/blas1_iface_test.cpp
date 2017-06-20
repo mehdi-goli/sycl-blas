@@ -6,12 +6,14 @@ typedef ::testing::Types<blas1_test_args<float>, blas1_test_args<double>>
 TYPED_TEST_CASE(BLAS1_Test, BlasTypes);
 
 REGISTER_SIZE(RANDOM_SIZE, interface1_test)
+REGISTER_STRD(1, interface1_test)
 REGISTER_PREC(float, 1e-4, interface1_test)
 REGISTER_PREC(double, 1e-6, interface1_test)
 
 B1_TEST(interface1_test) {
   UNPACK_PARAM(interface1_test)
   size_t size = TEST_SIZE;
+  size_t strd = TEST_STRD;
   ScalarT prec = TEST_PREC;
 
   std::cout << "size == " << size << std::endl;
@@ -30,13 +32,8 @@ B1_TEST(interface1_test) {
     std::vector<ScalarT> vT(1);
     std::vector<ScalarT> vU(1);
 
-    std::vector<IndVal<ScalarT>> vImax(
-        1, IndVal<ScalarT>(std::numeric_limits<size_t>::max(),
-                           std::numeric_limits<ScalarT>::min()));
-    std::vector<IndVal<ScalarT>> vImin(
-        1, IndVal<ScalarT>(std::numeric_limits<size_t>::max(),
-                           std::numeric_limits<ScalarT>::max()));
-
+    std::vector<IndVal<ScalarT>> vImax(1, constant<IndVal<ScalarT>, const_val::imax>::value);
+    std::vector<IndVal<ScalarT>> vImin(1, constant<IndVal<ScalarT>, const_val::imin>::value);
     size_t imax = 0, imin = 0;
     ScalarT asum(0);
     ScalarT alpha(0.0);
@@ -49,7 +46,7 @@ B1_TEST(interface1_test) {
     ScalarT _cos(0);
     ScalarT _sin(0);
     ScalarT giv(0);
-    for (size_t i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; i += i) {
       ScalarT &x = vX[i];
       ScalarT &y = vY[i];
       ScalarT &z = vZ[i];
@@ -99,15 +96,15 @@ B1_TEST(interface1_test) {
       auto view_vImax = TestClass::make_vview(buf_vImax);
       auto view_vImin = TestClass::make_vview(buf_vImin);
 
-      _axpy(ex, size, alpha, view_vX, 1, view_vY, 1);
-      _asum(ex, size, view_vY, 1, view_vR);
-      _dot(ex, size, view_vX, 1, view_vY, 1, view_vS);
-      _nrm2(ex, size, view_vY, 1, view_vT);
-      _iamax(ex, size, view_vY, 1, view_vImax);
-      _iamin(ex, size, view_vY, 1, view_vImin);
-      _rot(ex, size, view_vX, 1, view_vY, 1, _cos, _sin);
-      _dot(ex, size, view_vX, 1, view_vY, 1, view_vU);
-      _swap(ex, size, view_vX, 1, view_vY, 1);
+      _axpy(ex, size, alpha, view_vX, strd, view_vY, strd);
+      _asum(ex, size, view_vY, strd, view_vR);
+      _dot(ex, size, view_vX, strd, view_vY, strd, view_vS);
+      _nrm2(ex, size, view_vY, strd, view_vT);
+      _iamax(ex, size, view_vY, strd, view_vImax);
+      _iamin(ex, size, view_vY, strd, view_vImin);
+      _rot(ex, size, view_vX, strd, view_vY, strd, _cos, _sin);
+      _dot(ex, size, view_vX, strd, view_vY, strd, view_vU);
+      _swap(ex, size, view_vX, strd, view_vY, strd);
     }
     ScalarT prec_sample =
         std::max(std::numeric_limits<ScalarT>::epsilon() * size * 2,

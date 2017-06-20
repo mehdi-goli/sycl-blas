@@ -32,8 +32,10 @@ B1_TEST(interface1_test) {
     std::vector<ScalarT> vT(1);
     std::vector<ScalarT> vU(1);
 
-    std::vector<IndVal<ScalarT>> vImax(1, constant<IndVal<ScalarT>, const_val::imax>::value);
-    std::vector<IndVal<ScalarT>> vImin(1, constant<IndVal<ScalarT>, const_val::imin>::value);
+    std::vector<IndVal<ScalarT>> vImax(
+        1, constant<IndVal<ScalarT>, const_val::imax>::value);
+    std::vector<IndVal<ScalarT>> vImin(
+        1, constant<IndVal<ScalarT>, const_val::imin>::value);
     size_t imax = 0, imin = 0;
     ScalarT asum(0);
     ScalarT alpha(0.0);

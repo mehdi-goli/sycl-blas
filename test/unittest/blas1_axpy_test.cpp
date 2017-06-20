@@ -26,7 +26,7 @@ B1_TEST(axpy_test) {
 
   for (auto &d : cl::sycl::device::get_devices()) {
     for (size_t i = 0; i < size; ++i) {
-      if(i % strd == 0)
+      if (i % strd == 0)
         vZ[i] = alpha * vX[i] + vY[i];
       else
         vZ[i] = vY[i];
@@ -41,7 +41,6 @@ B1_TEST(axpy_test) {
       auto view_vY = TestClass::make_vview(buf_vY);
       _axpy(ex, size, alpha, view_vX, strd, view_vY, strd);
     }
-    for (size_t i = 0; i < size; ++i)
-      ASSERT_NEAR(vZ[i], vY[i], prec);
+    for (size_t i = 0; i < size; ++i) ASSERT_NEAR(vZ[i], vY[i], prec);
   }
 }

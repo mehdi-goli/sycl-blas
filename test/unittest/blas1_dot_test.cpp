@@ -24,8 +24,7 @@ B1_TEST(dot_test) {
   TestClass::set_rand(vY, size);
 
   ScalarT res(0);
-  for (size_t i = 0; i < size; i += strd)
-    res += vX[i] * vY[i];
+  for (size_t i = 0; i < size; i += strd) res += vX[i] * vY[i];
 
   for (auto &d : cl::sycl::device::get_devices()) {
     auto q = TestClass::make_queue(d);

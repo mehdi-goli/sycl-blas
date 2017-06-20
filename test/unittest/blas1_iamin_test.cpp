@@ -15,7 +15,8 @@ B1_TEST(iamin_test) {
 
   std::vector<ScalarT> vX(size);
   TestClass::set_rand(vX, size);
-  std::vector<IndVal<ScalarT>> vI(1, constant<IndVal<ScalarT>, const_val::imin>::value);
+  std::vector<IndVal<ScalarT>> vI(
+      1, constant<IndVal<ScalarT>, const_val::imin>::value);
 
   ScalarT min = std::numeric_limits<ScalarT>::max();
   size_t imin = std::numeric_limits<size_t>::max();

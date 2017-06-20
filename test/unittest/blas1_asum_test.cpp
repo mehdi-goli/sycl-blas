@@ -21,8 +21,7 @@ B1_TEST(asum_test) {
   TestClass::set_rand(vX, size);
   std::vector<ScalarT> vR(1, ScalarT(0));
   ScalarT res(0);
-  for(size_t i = 0; i < size; i += strd)
-    res += std::abs(vX[i]);
+  for (size_t i = 0; i < size; i += strd) res += std::abs(vX[i]);
 
   for (auto &d : cl::sycl::device::get_devices()) {
     auto q = TestClass::make_queue(d);

@@ -34,10 +34,10 @@ struct option_strd;
   };
 template <typename ScalarT, typename ClassName>
 struct option_prec;
-#define REGISTER_PREC(type, val, test_name)     \
-  template <>                                   \
-  struct option_prec<type, class test_name> {   \
-    static constexpr const type value = val;    \
+#define REGISTER_PREC(type, val, test_name)   \
+  template <>                                 \
+  struct option_prec<type, class test_name> { \
+    static constexpr const type value = val;  \
   };
 
 // Wraps the above arguments into one template parameter.
@@ -142,7 +142,7 @@ template <class TestClass>
 size_t test_strd() {
   static bool first = true;
   static size_t N;
-  if(first) {
+  if (first) {
     first = false;
     N = ((rand() & 1) * (rand() % 5)) + 1;
   }

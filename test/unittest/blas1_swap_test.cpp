@@ -37,7 +37,7 @@ B1_TEST(swap_test) {
       _swap(ex, size, view_vX, strd, view_vY, strd);
     }
     for (size_t i = 0; i < size; ++i) {
-      if(i % strd == 0) {
+      if (i % strd == 0) {
         if (swap_checker_mode) {
           ASSERT_EQ(vZ[i], vX[i]);
           ASSERT_EQ(vT[i], vY[i]);

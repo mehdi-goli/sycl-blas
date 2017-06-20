@@ -15,7 +15,8 @@ B1_TEST(iamax_test) {
 
   std::vector<ScalarT> vX(size);
   TestClass::set_rand(vX, size);
-  std::vector<IndVal<ScalarT>> vI(1, constant<IndVal<ScalarT>, const_val::imax>::value);
+  std::vector<IndVal<ScalarT>> vI(
+      1, constant<IndVal<ScalarT>, const_val::imax>::value);
 
   ScalarT max = 0.;
   size_t imax = std::numeric_limits<size_t>::max();

@@ -28,7 +28,7 @@ B1_TEST(copy_test) {
       _copy(ex, size, view_vX, strd, view_vY, strd);
     }
     for (size_t i = 0; i < size; ++i) {
-      if(i % strd == 0)
+      if (i % strd == 0)
         ASSERT_EQ(vX[i], vY[i]);
       else
         ASSERT_EQ(0, vY[i]);

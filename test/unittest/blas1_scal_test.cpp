@@ -24,7 +24,7 @@ B1_TEST(scal_test) {
 
   for (auto &d : cl::sycl::device::get_devices()) {
     for (size_t i = 0; i < size; ++i) {
-      if(i % strd == 0)
+      if (i % strd == 0)
         vY[i] = alpha * vX[i];
       else
         vY[i] = vX[i];

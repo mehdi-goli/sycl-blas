@@ -27,8 +27,7 @@ B1_TEST(nrm2_test) {
   TestClass::set_rand(vX, size);
 
   ScalarT res(0);
-  for (size_t i = 0; i < size; i += strd)
-    res += vX[i] * vX[i];
+  for (size_t i = 0; i < size; i += strd) res += vX[i] * vX[i];
   res = std::sqrt(res);
 
   for (auto &d : cl::sycl::device::get_devices()) {

@@ -29,7 +29,6 @@
 #include <stdexcept>
 #include <vector>
 
-#include <operations/blas3_trees.hpp>
 #include <operations/blas_operators.hpp>
 #include <views/view_sycl.hpp>
 

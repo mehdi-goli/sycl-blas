@@ -1,9 +1,9 @@
 #include <chrono>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <string>
-#include <utility>
 #include <unistd.h>
+#include <utility>
 
 template <typename ScalarT>
 ScalarT *new_data(size_t size, bool initialized = true) {
@@ -64,8 +64,10 @@ struct benchmark {
               << align_left("Performance", text_flops_length) << std::endl;
   }
 
-  static void output_data(const std::string &short_name, int size, int no_reps, double flops) {
-    std::cout << align_left(short_name + "_" + std::to_string(size), text_name_length)
+  static void output_data(const std::string &short_name, int size, int no_reps,
+                          double flops) {
+    std::cout << align_left(short_name + "_" + std::to_string(size),
+                            text_name_length)
               << align_left(std::to_string(no_reps), text_iterations_length)
               << align_left(std::to_string(flops * 1e-6), text_flops_length, 1)
               << "MFlops" << std::endl;
@@ -88,11 +90,11 @@ struct benchmark {
     const unsigned max_elems = step_size * (NUM_STEPS);        \
     {
 #define BENCHMARK_REGISTER_FUNCTION(NAME, FUNCTION)                          \
-      for (size_t nelems = step_size; nelems < max_elems; nelems *= step_size) { \
-        const std::string short_name = NAME;                                     \
-        auto flops = blasbenchmark.FUNCTION(num_reps, nelems);                   \
-        benchmark<>::output_data(short_name, nelems, num_reps, flops);           \
-      }
-#define BENCHMARK_MAIN_END()   \
-    }                          \
+  for (size_t nelems = step_size; nelems < max_elems; nelems *= step_size) { \
+    const std::string short_name = NAME;                                     \
+    auto flops = blasbenchmark.FUNCTION(num_reps, nelems);                   \
+    benchmark<>::output_data(short_name, nelems, num_reps, flops);           \
+  }
+#define BENCHMARK_MAIN_END() \
+  }                          \
   }

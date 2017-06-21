@@ -161,7 +161,8 @@ class ClBlastBenchmarker {
       buf1.send(context);
 
       flops = benchmark<>::measure(no_reps, size * 1, [&]() {
-        clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(), &event);
+        clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(),
+                               &event);
         clWaitForEvents(1, &event);
         clReleaseEvent(event);
       });
@@ -183,7 +184,8 @@ class ClBlastBenchmarker {
       buf2.send(context);
 
       flops = benchmark<>::measure(no_reps, size * 2, [&]() {
-        clblast::Axpy<ScalarT>(size, alpha, buf1.dev(), 0, 1, buf2.dev(), 0, 1, context._queue(), &event);
+        clblast::Axpy<ScalarT>(size, alpha, buf1.dev(), 0, 1, buf2.dev(), 0, 1,
+                               context._queue(), &event);
         clWaitForEvents(1, &event);
         clReleaseEvent(event);
       });
@@ -205,7 +207,8 @@ class ClBlastBenchmarker {
       bufr.create(context);
 
       flops = benchmark<>::measure(no_reps, size * 2, [&]() {
-        clblast::Asum<ScalarT>(size, bufr.dev(), 0, buf1.dev(), 0, 1, context._queue(), &event);
+        clblast::Asum<ScalarT>(size, bufr.dev(), 0, buf1.dev(), 0, 1,
+                               context._queue(), &event);
         clWaitForEvents(1, &event);
         clReleaseEvent(event);
       });
@@ -227,7 +230,8 @@ class ClBlastBenchmarker {
       bufr.create(context);
 
       flops = benchmark<>::measure(no_reps, size * 2, [&]() {
-        clblast::Nrm2<ScalarT>(size, bufr.dev(), 0, buf1.dev(), 0, 1, context._queue(), &event);
+        clblast::Nrm2<ScalarT>(size, bufr.dev(), 0, buf1.dev(), 0, 1,
+                               context._queue(), &event);
         clWaitForEvents(1, &event);
         clReleaseEvent(event);
       });
@@ -251,7 +255,8 @@ class ClBlastBenchmarker {
       bufr.create(context);
 
       flops = benchmark<>::measure(no_reps, size * 2, [&]() {
-        clblast::Dot<ScalarT>(size, bufr.dev(), 0, buf1.dev(), 0, 1, buf2.dev(), 0, 1, context._queue(), &event);
+        clblast::Dot<ScalarT>(size, bufr.dev(), 0, buf1.dev(), 0, 1, buf2.dev(),
+                              0, 1, context._queue(), &event);
         clWaitForEvents(1, &event);
         clReleaseEvent(event);
       });
@@ -275,7 +280,8 @@ class ClBlastBenchmarker {
       buf_i.create(context);
 
       flops = benchmark<>::measure(no_reps, size * 2, [&]() {
-        clblast::Amax<ScalarT>(size, buf_i.dev(), 0, buf1.dev(), 0, 1, context._queue(), &event);
+        clblast::Amax<ScalarT>(size, buf_i.dev(), 0, buf1.dev(), 0, 1,
+                               context._queue(), &event);
         clWaitForEvents(1, &event);
         clReleaseEvent(event);
       });
@@ -323,8 +329,10 @@ class ClBlastBenchmarker {
       buf2.send(context);
 
       flops = benchmark<>::measure(no_reps, size * 2, [&]() {
-        clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(), &event);
-        clblast::Scal<ScalarT>(size, alpha, buf2.dev(), 0, 1, context._queue(), &event);
+        clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(),
+                               &event);
+        clblast::Scal<ScalarT>(size, alpha, buf2.dev(), 0, 1, context._queue(),
+                               &event);
       });
 
       buf1.read(context);
@@ -347,9 +355,12 @@ class ClBlastBenchmarker {
       buf3.send(context);
 
       flops = benchmark<>::measure(no_reps, size * 3, [&]() {
-        clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(), &event);
-        clblast::Scal<ScalarT>(size, alpha, buf2.dev(), 0, 1, context._queue(), &event);
-        clblast::Scal<ScalarT>(size, alpha, buf3.dev(), 0, 1, context._queue(), &event);
+        clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(),
+                               &event);
+        clblast::Scal<ScalarT>(size, alpha, buf2.dev(), 0, 1, context._queue(),
+                               &event);
+        clblast::Scal<ScalarT>(size, alpha, buf3.dev(), 0, 1, context._queue(),
+                               &event);
       });
 
       buf1.read(context);
@@ -377,12 +388,18 @@ class ClBlastBenchmarker {
       buf_i.create(context);
 
       flops = benchmark<>::measure(no_reps, size * 12, [&]() {
-        clblast::Axpy<ScalarT>(size, alpha, buf1.dev(), 0, 1, buf2.dev(), 0, 1, context._queue(), &event);
-        clblast::Asum<ScalarT>(size, bufr.dev(), 0, buf2.dev(), 0, 1, context._queue(), &event);
-        clblast::Dot<ScalarT>(size, bufr.dev(), 1, buf1.dev(), 0, 1, buf2.dev(), 0, 1, context._queue(), &event);
-        clblast::Nrm2<ScalarT>(size, bufr.dev(), 2, buf1.dev(), 0, 1, context._queue(), &event);
-        clblast::Amax<ScalarT>(size, buf_i.dev(), 0, buf1.dev(), 0, 1, context._queue(), &event);
-        clblast::Swap<ScalarT>(size, buf1.dev(), 0, 1, buf2.dev(), 0, 1, context._queue(), &event);
+        clblast::Axpy<ScalarT>(size, alpha, buf1.dev(), 0, 1, buf2.dev(), 0, 1,
+                               context._queue(), &event);
+        clblast::Asum<ScalarT>(size, bufr.dev(), 0, buf2.dev(), 0, 1,
+                               context._queue(), &event);
+        clblast::Dot<ScalarT>(size, bufr.dev(), 1, buf1.dev(), 0, 1, buf2.dev(),
+                              0, 1, context._queue(), &event);
+        clblast::Nrm2<ScalarT>(size, bufr.dev(), 2, buf1.dev(), 0, 1,
+                               context._queue(), &event);
+        clblast::Amax<ScalarT>(size, buf_i.dev(), 0, buf1.dev(), 0, 1,
+                               context._queue(), &event);
+        clblast::Swap<ScalarT>(size, buf1.dev(), 0, 1, buf2.dev(), 0, 1,
+                               context._queue(), &event);
       });
       buf1.read(context);
       buf2.read(context);

@@ -45,7 +45,7 @@ class SyclBlasBenchmarker {
       auto buf1 = mkbuffer<ScalarT>(v1, size);
       auto vvw1 = mkvview(buf1);
       flops = benchmark<>::measure(no_reps, size * 1,
-                                    [&]() { _scal(ex, size, alpha, vvw1, 1); });
+                                   [&]() { _scal(ex, size, alpha, vvw1, 1); });
     }
     release_data(v1);
     return flops;
@@ -62,8 +62,9 @@ class SyclBlasBenchmarker {
       auto buf2 = mkbuffer<ScalarT>(v2, size);
       auto vvw1 = mkvview(buf1);
       auto vvw2 = mkvview(buf2);
-      flops = benchmark<>::measure(no_reps, size * 2,
-                                   [&]() { _axpy(ex, size, alpha, vvw1, 1, vvw2, 1); });
+      flops = benchmark<>::measure(no_reps, size * 2, [&]() {
+        _axpy(ex, size, alpha, vvw1, 1, vvw2, 1);
+      });
     }
     release_data(v1);
     release_data(v2);
@@ -81,7 +82,7 @@ class SyclBlasBenchmarker {
       auto vvw1 = mkvview(buf1);
       auto vvwR = mkvview(bufR);
       flops = benchmark<>::measure(no_reps, size * 2,
-                                 [&]() { _asum(ex, size, vvw1, 1, vvwR); });
+                                   [&]() { _asum(ex, size, vvw1, 1, vvwR); });
     }
     release_data(v1);
     return flops;
@@ -98,7 +99,7 @@ class SyclBlasBenchmarker {
       auto vvw1 = mkvview(buf1);
       auto vvwR = mkvview(bufR);
       flops = benchmark<>::measure(no_reps, size * 2,
-                                 [&]() { _nrm2(ex, size, vvw1, 1, vvwR); });
+                                   [&]() { _nrm2(ex, size, vvw1, 1, vvwR); });
     }
     release_data(v1);
     return flops;
@@ -117,8 +118,8 @@ class SyclBlasBenchmarker {
       auto vvw1 = mkvview(buf1);
       auto vvw2 = mkvview(buf2);
       auto vvwR = mkvview(bufR);
-      flops = benchmark<>::measure(no_reps, size * 2,
-                                 [&]() { _dot(ex, size, vvw1, 1, vvw2, 1, vvwR); });
+      flops = benchmark<>::measure(
+          no_reps, size * 2, [&]() { _dot(ex, size, vvw1, 1, vvw2, 1, vvwR); });
     }
     release_data(v1);
     release_data(v2);
@@ -136,7 +137,7 @@ class SyclBlasBenchmarker {
       auto vvw1 = mkvview(buf1);
       auto vvw_i = mkvview(buf_i);
       flops = benchmark<>::measure(no_reps, size * 2,
-                                 [&]() { _iamax(ex, size, vvw1, 1, vvw_i); });
+                                   [&]() { _iamax(ex, size, vvw1, 1, vvw_i); });
     }
     release_data(v1);
     return flops;
@@ -153,7 +154,7 @@ class SyclBlasBenchmarker {
       auto vvw1 = mkvview(buf1);
       auto vvw_i = mkvview(buf_i);
       flops = benchmark<>::measure(no_reps, size * 2,
-                                 [&]() { _iamin(ex, size, vvw1, 1, vvw_i); });
+                                   [&]() { _iamin(ex, size, vvw1, 1, vvw_i); });
     }
     release_data(v1);
     return flops;

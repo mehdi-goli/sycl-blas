@@ -6,7 +6,7 @@ typedef ::testing::Types<blas1_test_args<float>, blas1_test_args<double> >
 TYPED_TEST_CASE(BLAS1_Test, BlasTypes);
 
 REGISTER_SIZE(RANDOM_SIZE, scal_test)
-REGISTER_STRD(RANDOM_SIZE, scal_test)
+REGISTER_STRD(RANDOM_STRD, scal_test)
 REGISTER_PREC(float, 1e-4, scal_test)
 REGISTER_PREC(double, 1e-6, scal_test)
 REGISTER_PREC(long double, 1e-7, scal_test)
@@ -35,8 +35,10 @@ B1_TEST(scal_test) {
     {
       auto buf_vX = TestClass::make_buffer(vX);
       auto view_vX = TestClass::make_vview(buf_vX);
-      _scal(ex, size, alpha, view_vX, 1);
+      _scal(ex, size, alpha, view_vX, strd);
     }
-    for (size_t i = 0; i < size; ++i) ASSERT_NEAR(vY[i], vX[i], prec);
+    for (size_t i = 0; i < size; ++i) {
+      ASSERT_NEAR(vY[i], vX[i], prec);
+    }
   }
 }

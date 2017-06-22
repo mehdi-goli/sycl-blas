@@ -356,9 +356,12 @@ class ClBlastBenchmarker {
       buf3.send(context);
 
       flops = benchmark<>::measure(no_reps, size * 3, [&]() {
-        clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(), &event);
-        clblast::Scal<ScalarT>(size, alpha, buf2.dev(), 0, 1, context._queue(), &event);
-        clblast::Scal<ScalarT>(size, alpha, buf3.dev(), 0, 1, context._queue(), &event);
+        clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(),
+                               &event);
+        clblast::Scal<ScalarT>(size, alpha, buf2.dev(), 0, 1, context._queue(),
+                               &event);
+        clblast::Scal<ScalarT>(size, alpha, buf3.dev(), 0, 1, context._queue(),
+                               &event);
       });
 
       buf1.read(context);
@@ -372,16 +375,18 @@ class ClBlastBenchmarker {
     UNPACK_PARAM;
     double flops;
     {
-      ScalarT alphas[] = { 1.78426458744, 2.187346575843, 3.78164387328 };
-      size_t offsets[] = { 0, size, size * 2 };
+      ScalarT alphas[] = {1.78426458744, 2.187346575843, 3.78164387328};
+      size_t offsets[] = {0, size, size * 2};
       MemBuffer<ScalarT> bufsrc(size * 3);
       MemBuffer<ScalarT> bufdst(size * 3);
 
       bufsrc.send(context);
       bufdst.send(context);
 
-      flops = benchmark<>::measure(no_reps, size * 3 * 2, [&](){
-        clblast::AxpyBatched<ScalarT>(size, alphas, bufsrc.dev(), offsets, 1, bufdst.dev(), offsets, 1, 3, context._queue(), &event);
+      flops = benchmark<>::measure(no_reps, size * 3 * 2, [&]() {
+        clblast::AxpyBatched<ScalarT>(size, alphas, bufsrc.dev(), offsets, 1,
+                                      bufdst.dev(), offsets, 1, 3,
+                                      context._queue(), &event);
       });
 
       bufsrc.read(context);

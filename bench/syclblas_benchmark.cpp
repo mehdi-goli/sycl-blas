@@ -213,7 +213,8 @@ class SyclBlasBenchmarker {
 
   BENCHMARK_FUNCTION(axpy3op_bench) {
     UNPACK_PARAM;
-    std::array<ScalarT, 3> alphas = { 1.78426458744, 2.187346575843, 3.78164387328 };
+    std::array<ScalarT, 3> alphas = {1.78426458744, 2.187346575843,
+                                     3.78164387328};
     ScalarT *vsrc1 = new_data<ScalarT>(size);
     ScalarT *vsrc2 = new_data<ScalarT>(size);
     ScalarT *vsrc3 = new_data<ScalarT>(size);
@@ -236,7 +237,7 @@ class SyclBlasBenchmarker {
       auto vvwdst2 = mkvview(bufdst2);
       auto vvwdst3 = mkvview(bufdst3);
 
-      flops = benchmark<>::measure(no_reps, size * 3 * 2, [&](){
+      flops = benchmark<>::measure(no_reps, size * 3 * 2, [&]() {
         _axpy(ex, size, alphas[0], vvwsrc1, 1, vvwdst1, 1);
         _axpy(ex, size, alphas[1], vvwsrc2, 1, vvwdst2, 1);
         _axpy(ex, size, alphas[2], vvwsrc3, 1, vvwdst3, 1);

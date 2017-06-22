@@ -162,7 +162,7 @@ class SyclBlasBenchmarker {
 
   BENCHMARK_FUNCTION(scal2op_bench) {
     UNPACK_PARAM;
-    ScalarT alpha(2.546562345);
+    ScalarT alpha(2.4367453465);
     ScalarT *v1 = new_data<ScalarT>(size);
     ScalarT *v2 = new_data<ScalarT>(size);
     double flops;
@@ -185,7 +185,7 @@ class SyclBlasBenchmarker {
 
   BENCHMARK_FUNCTION(scal3op_bench) {
     UNPACK_PARAM;
-    ScalarT alpha(2.546562345);
+    ScalarT alpha(2.4367453465);
     ScalarT *v1 = new_data<ScalarT>(size);
     ScalarT *v2 = new_data<ScalarT>(size);
     ScalarT *v3 = new_data<ScalarT>(size);
@@ -208,6 +208,46 @@ class SyclBlasBenchmarker {
     release_data(v1);
     release_data(v2);
     release_data(v3);
+    return flops;
+  }
+
+  BENCHMARK_FUNCTION(axpy3op_bench) {
+    UNPACK_PARAM;
+    std::array<ScalarT, 3> alphas = { 1.78426458744, 2.187346575843, 3.78164387328 };
+    ScalarT *vsrc1 = new_data<ScalarT>(size);
+    ScalarT *vsrc2 = new_data<ScalarT>(size);
+    ScalarT *vsrc3 = new_data<ScalarT>(size);
+    ScalarT *vdst1 = new_data<ScalarT>(size);
+    ScalarT *vdst2 = new_data<ScalarT>(size);
+    ScalarT *vdst3 = new_data<ScalarT>(size);
+    double flops;
+    {
+      auto bufsrc1 = mkbuffer<ScalarT>(vsrc1, size);
+      auto bufsrc2 = mkbuffer<ScalarT>(vsrc2, size);
+      auto bufsrc3 = mkbuffer<ScalarT>(vsrc3, size);
+      auto bufdst1 = mkbuffer<ScalarT>(vdst1, size);
+      auto bufdst2 = mkbuffer<ScalarT>(vdst2, size);
+      auto bufdst3 = mkbuffer<ScalarT>(vdst3, size);
+
+      auto vvwsrc1 = mkvview(bufsrc1);
+      auto vvwsrc2 = mkvview(bufsrc2);
+      auto vvwsrc3 = mkvview(bufsrc3);
+      auto vvwdst1 = mkvview(bufdst1);
+      auto vvwdst2 = mkvview(bufdst2);
+      auto vvwdst3 = mkvview(bufdst3);
+
+      flops = benchmark<>::measure(no_reps, size * 3 * 2, [&](){
+        _axpy(ex, size, alphas[0], vvwsrc1, 1, vvwdst1, 1);
+        _axpy(ex, size, alphas[1], vvwsrc2, 1, vvwdst2, 1);
+        _axpy(ex, size, alphas[2], vvwsrc3, 1, vvwdst3, 1);
+      });
+    }
+    release_data(vsrc1);
+    release_data(vsrc2);
+    release_data(vsrc3);
+    release_data(vdst1);
+    release_data(vdst2);
+    release_data(vdst3);
     return flops;
   }
 
@@ -322,6 +362,13 @@ BENCHMARK_REGISTER_FUNCTION("scal3op_double", scal3op_bench<double>);
 /*                             scal3op_bench<std::complex<float>>); */
 /* BENCHMARK_REGISTER_FUNCTION("scal3op_complex_double", */
 /*                             scal3op_bench<std::complex<double>>); */
+
+BENCHMARK_REGISTER_FUNCTION("axpy3op_float", axpy3op_bench<float>);
+BENCHMARK_REGISTER_FUNCTION("axpy3op_double", axpy3op_bench<double>);
+/* BENCHMARK_REGISTER_FUNCTION("axpy3op_complex_float", */
+/*                             axpy3op_bench<std::complex<float>>); */
+/* BENCHMARK_REGISTER_FUNCTION("axpy3op_complex_double", */
+/*                             axpy3op_bench<std::complex<double>>); */
 
 /* BENCHMARK_REGISTER_FUNCTION("blas1_float", blas1_bench<float>); */
 BENCHMARK_REGISTER_FUNCTION("blas1_double", blas1_bench<double>);

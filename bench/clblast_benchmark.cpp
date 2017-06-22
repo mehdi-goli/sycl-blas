@@ -1,4 +1,5 @@
 #include <complex>
+#include <vector>
 
 #include <clblast.h>
 
@@ -155,7 +156,7 @@ class ClBlastBenchmarker {
     UNPACK_PARAM;
     double flops;
     {
-      ScalarT alpha(2.44566723436);
+      ScalarT alpha(2.4367453465);
       MemBuffer<ScalarT> buf1(size);
 
       buf1.send(context);
@@ -176,7 +177,7 @@ class ClBlastBenchmarker {
     UNPACK_PARAM;
     double flops;
     {
-      ScalarT alpha(2.44566723436);
+      ScalarT alpha(2.4367453465);
       MemBuffer<ScalarT> buf1(size);
       MemBuffer<ScalarT> buf2(size);
 
@@ -321,7 +322,7 @@ class ClBlastBenchmarker {
     UNPACK_PARAM;
     double flops;
     {
-      ScalarT alpha(2.4463234132);
+      ScalarT alpha(2.4367453465);
       MemBuffer<ScalarT> buf1(size);
       MemBuffer<ScalarT> buf2(size);
 
@@ -345,7 +346,7 @@ class ClBlastBenchmarker {
     UNPACK_PARAM;
     double flops;
     {
-      ScalarT alpha(2.4463234132);
+      ScalarT alpha(2.4367453465);
       MemBuffer<ScalarT> buf1(size);
       MemBuffer<ScalarT> buf2(size);
       MemBuffer<ScalarT> buf3(size);
@@ -355,12 +356,9 @@ class ClBlastBenchmarker {
       buf3.send(context);
 
       flops = benchmark<>::measure(no_reps, size * 3, [&]() {
-        clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(),
-                               &event);
-        clblast::Scal<ScalarT>(size, alpha, buf2.dev(), 0, 1, context._queue(),
-                               &event);
-        clblast::Scal<ScalarT>(size, alpha, buf3.dev(), 0, 1, context._queue(),
-                               &event);
+        clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(), &event);
+        clblast::Scal<ScalarT>(size, alpha, buf2.dev(), 0, 1, context._queue(), &event);
+        clblast::Scal<ScalarT>(size, alpha, buf3.dev(), 0, 1, context._queue(), &event);
       });
 
       buf1.read(context);
@@ -370,11 +368,33 @@ class ClBlastBenchmarker {
     return flops;
   }
 
+  BENCHMARK_FUNCTION(axpy3op_bench) {
+    UNPACK_PARAM;
+    double flops;
+    {
+      ScalarT alphas[] = { 1.78426458744, 2.187346575843, 3.78164387328 };
+      size_t offsets[] = { 0, size, size * 2 };
+      MemBuffer<ScalarT> bufsrc(size * 3);
+      MemBuffer<ScalarT> bufdst(size * 3);
+
+      bufsrc.send(context);
+      bufdst.send(context);
+
+      flops = benchmark<>::measure(no_reps, size * 3 * 2, [&](){
+        clblast::AxpyBatched<ScalarT>(size, alphas, bufsrc.dev(), offsets, 1, bufdst.dev(), offsets, 1, 3, context._queue(), &event);
+      });
+
+      bufsrc.read(context);
+      bufdst.read(context);
+    }
+    return flops;
+  }
+
   BENCHMARK_FUNCTION(blas1_bench) {
     UNPACK_PARAM;
     double flops;
     {
-      ScalarT alpha(2.4463234132);
+      ScalarT alpha(3.135345123);
       MemBuffer<ScalarT> buf1(size);
       MemBuffer<ScalarT> buf2(size);
       ScalarT vr[4];
@@ -475,6 +495,13 @@ BENCHMARK_REGISTER_FUNCTION("scal3op_double", scal3op_bench<double>);
 /*                             scal3op_bench<std::complex<float>>); */
 /* BENCHMARK_REGISTER_FUNCTION("scal3op_complex_double", */
 /*                             scal3op_bench<std::complex<double>>); */
+
+BENCHMARK_REGISTER_FUNCTION("axpy3op_float", axpy3op_bench<float>);
+BENCHMARK_REGISTER_FUNCTION("axpy3op_double", axpy3op_bench<double>);
+/* BENCHMARK_REGISTER_FUNCTION("axpy3op_complex_float", */
+/*                             axpy3op_bench<std::complex<float>>); */
+/* BENCHMARK_REGISTER_FUNCTION("axpy3op_complex_double", */
+/*                             axpy3op_bench<std::complex<double>>); */
 
 BENCHMARK_REGISTER_FUNCTION("blas1_float", blas1_bench<float>);
 BENCHMARK_REGISTER_FUNCTION("blas1_double", blas1_bench<double>);

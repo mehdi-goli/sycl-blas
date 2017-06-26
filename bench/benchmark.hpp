@@ -38,10 +38,9 @@ struct benchmark {
 
     for (size_t reps = 0; reps < numReps; reps++) {
       auto start = ClockT::now();
-
       func(std::forward<Args>(args)...);
-
-      dur += std::chrono::duration_cast<time_units_t>(ClockT::now() - start);
+      auto end = ClockT::now();
+      dur += end - start;
     }
     return (double(flops) * numReps) / (dur.count() * 1e-9);
   }

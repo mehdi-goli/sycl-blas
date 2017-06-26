@@ -7,23 +7,22 @@ using namespace blas;
 #define UNPACK_PARAM using ScalarT = TypeParam;
 template <typename ExecutorType = SYCL>
 class SyclBlasBenchmarker {
+  cl::sycl::queue q;
   Executor<ExecutorType> ex;
 
  public:
-  template <typename DeviceSelector>
-  static cl::sycl::queue mkqueue(DeviceSelector &&s) {
-    return cl::sycl::queue(s, [=](cl::sycl::exception_list eL) {
-      try {
-        for (auto &e : eL) std::rethrow_exception(e);
-      } catch (cl::sycl::exception &e) {
-        std::cout << " E " << e.what() << std::endl;
-      } catch (...) {
-        std::cout << " An exception " << std::endl;
-      }
-    });
-  }
-
-  SyclBlasBenchmarker() : ex(mkqueue(cl::sycl::default_selector())) {}
+  SyclBlasBenchmarker()
+      : q(cl::sycl::default_selector(),
+          [=](cl::sycl::exception_list eL) {
+            try {
+              for (auto &e : eL) std::rethrow_exception(e);
+            } catch (cl::sycl::exception &e) {
+              std::cout << " E " << e.what() << std::endl;
+            } catch (...) {
+              std::cout << " An exception " << std::endl;
+            }
+          }),
+        ex(q) {}
 
   template <typename ValueType>
   static cl::sycl::buffer<ValueType, 1> mkbuffer(ValueType *data, size_t len) {
@@ -44,8 +43,10 @@ class SyclBlasBenchmarker {
     {
       auto buf1 = mkbuffer<ScalarT>(v1, size);
       auto vvw1 = mkvview(buf1);
-      flops = benchmark<>::measure(no_reps, size * 1,
-                                   [&]() { _scal(ex, size, alpha, vvw1, 1); });
+      flops = benchmark<>::measure(no_reps, size * 1, [&]() {
+        _scal(ex, size, alpha, vvw1, 1);
+        q.wait_and_throw();
+      });
     }
     release_data(v1);
     return flops;
@@ -64,6 +65,7 @@ class SyclBlasBenchmarker {
       auto vvw2 = mkvview(buf2);
       flops = benchmark<>::measure(no_reps, size * 2, [&]() {
         _axpy(ex, size, alpha, vvw1, 1, vvw2, 1);
+        q.wait_and_throw();
       });
     }
     release_data(v1);
@@ -81,8 +83,10 @@ class SyclBlasBenchmarker {
       auto bufR = mkbuffer<ScalarT>(&vr, 1);
       auto vvw1 = mkvview(buf1);
       auto vvwR = mkvview(bufR);
-      flops = benchmark<>::measure(no_reps, size * 2,
-                                   [&]() { _asum(ex, size, vvw1, 1, vvwR); });
+      flops = benchmark<>::measure(no_reps, size * 2, [&]() {
+        _asum(ex, size, vvw1, 1, vvwR);
+        q.wait_and_throw();
+      });
     }
     release_data(v1);
     return flops;
@@ -98,8 +102,10 @@ class SyclBlasBenchmarker {
       auto bufR = mkbuffer<ScalarT>(&vr, 1);
       auto vvw1 = mkvview(buf1);
       auto vvwR = mkvview(bufR);
-      flops = benchmark<>::measure(no_reps, size * 2,
-                                   [&]() { _nrm2(ex, size, vvw1, 1, vvwR); });
+      flops = benchmark<>::measure(no_reps, size * 2, [&]() {
+        _nrm2(ex, size, vvw1, 1, vvwR);
+        q.wait_and_throw();
+      });
     }
     release_data(v1);
     return flops;
@@ -118,8 +124,10 @@ class SyclBlasBenchmarker {
       auto vvw1 = mkvview(buf1);
       auto vvw2 = mkvview(buf2);
       auto vvwR = mkvview(bufR);
-      flops = benchmark<>::measure(
-          no_reps, size * 2, [&]() { _dot(ex, size, vvw1, 1, vvw2, 1, vvwR); });
+      flops = benchmark<>::measure(no_reps, size * 2, [&]() {
+        _dot(ex, size, vvw1, 1, vvw2, 1, vvwR);
+        q.wait_and_throw();
+      });
     }
     release_data(v1);
     release_data(v2);
@@ -136,8 +144,10 @@ class SyclBlasBenchmarker {
       auto buf_i = mkbuffer<IndVal<ScalarT>>(&vI, 1);
       auto vvw1 = mkvview(buf1);
       auto vvw_i = mkvview(buf_i);
-      flops = benchmark<>::measure(no_reps, size * 2,
-                                   [&]() { _iamax(ex, size, vvw1, 1, vvw_i); });
+      flops = benchmark<>::measure(no_reps, size * 2, [&]() {
+        _iamax(ex, size, vvw1, 1, vvw_i);
+        q.wait_and_throw();
+      });
     }
     release_data(v1);
     return flops;
@@ -153,8 +163,10 @@ class SyclBlasBenchmarker {
       auto buf_i = mkbuffer<IndVal<ScalarT>>(&vI, 1);
       auto vvw1 = mkvview(buf1);
       auto vvw_i = mkvview(buf_i);
-      flops = benchmark<>::measure(no_reps, size * 2,
-                                   [&]() { _iamin(ex, size, vvw1, 1, vvw_i); });
+      flops = benchmark<>::measure(no_reps, size * 2, [&]() {
+        _iamin(ex, size, vvw1, 1, vvw_i);
+        q.wait_and_throw();
+      });
     }
     release_data(v1);
     return flops;
@@ -176,6 +188,7 @@ class SyclBlasBenchmarker {
       flops = benchmark<>::measure(no_reps, size * 2, [&]() {
         _scal(ex, size, alpha, vvw1, 1);
         _scal(ex, size, alpha, vvw2, 1);
+        q.wait_and_throw();
       });
     }
     release_data(v1);
@@ -203,6 +216,7 @@ class SyclBlasBenchmarker {
         _scal(ex, size, alpha, vvw1, 1);
         _scal(ex, size, alpha, vvw2, 1);
         _scal(ex, size, alpha, vvw3, 1);
+        q.wait_and_throw();
       });
     }
     release_data(v1);
@@ -241,6 +255,7 @@ class SyclBlasBenchmarker {
         _axpy(ex, size, alphas[0], vvwsrc1, 1, vvwdst1, 1);
         _axpy(ex, size, alphas[1], vvwsrc2, 1, vvwdst2, 1);
         _axpy(ex, size, alphas[2], vvwsrc3, 1, vvwdst3, 1);
+        q.wait_and_throw();
       });
     }
     release_data(vsrc1);
@@ -289,6 +304,7 @@ class SyclBlasBenchmarker {
         /* _iamin(ex, size, vvw2, 1, vvw_i2); */
         _dot(ex, size, vvw1, 1, vvw2, 1, vvwr3);
         _swap(ex, size, vvw1, 1, vvw2, 1);
+        q.wait_and_throw();
       });
     }
     release_data(v1);

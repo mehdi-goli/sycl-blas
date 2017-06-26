@@ -303,7 +303,6 @@ class SyclBlasBenchmarker {
         _iamax(ex, size, vvw2, 1, vvw_i1);
         /* _iamin(ex, size, vvw2, 1, vvw_i2); */
         _dot(ex, size, vvw1, 1, vvw2, 1, vvwr3);
-        _swap(ex, size, vvw1, 1, vvw2, 1);
         q.wait_and_throw();
       });
     }

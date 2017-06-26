@@ -3,17 +3,60 @@
 #include <complex>
 #include <vector>
 
-#include <clblast.h>
+#include <clBLAS.h>
 
 #include "clwrap.hpp"
 
 #define UNPACK_PARAM using ScalarT = TypeParam;
 
-class ClBlastBenchmarker {
+#define CLBLAS_FUNCTION(postfix)                         \
+  template <typename T>                                  \
+  struct clblasX##postfix;                               \
+  template <>                                            \
+  struct clblasX##postfix<float> {                       \
+    static constexpr const auto func = &clblasS##postfix; \
+  };                                                     \
+  template <>                                            \
+  struct clblasX##postfix<double> {                      \
+    static constexpr const auto func = &clblasD##postfix; \
+  };
+/* template <> struct clblasX##postfix<std::complex<float>> { \ */
+/*   static constexpr const auto value = clblasC##postfix; \ */
+/* }; \ */
+/* template <> struct clblasX##postfix<std::complex<double>> { \ */
+/*   static constexpr const auto value = clblasZ##postfix; \ */
+/* }; */
+
+#define CLBLASI_FUNCTION(postfix)                         \
+  template <typename T>                                   \
+  struct clblasiX##postfix;                               \
+  template <>                                             \
+  struct clblasiX##postfix<float> {                       \
+    static constexpr const auto func = &clblasiS##postfix; \
+  };                                                      \
+  template <>                                             \
+  struct clblasiX##postfix<double> {                      \
+    static constexpr const auto func = &clblasiD##postfix; \
+  };
+/* template <> struct clblasiX##postfix<std::complex<float>> { \ */
+/*   static constexpr const auto value = clblasiC##postfix; \ */
+/* }; \ */
+/* template <> struct clblasiX##postfix<std::complex<double>> { \ */
+/*   static constexpr const auto value = clblasiZ##postfix; \ */
+/* }; */
+
+CLBLAS_FUNCTION(scal);
+CLBLAS_FUNCTION(asum);
+CLBLAS_FUNCTION(axpy);
+CLBLAS_FUNCTION(nrm2);
+CLBLAS_FUNCTION(dot);
+CLBLASI_FUNCTION(amax);
+
+class ClBlasBenchmarker {
   Context context;
 
  public:
-  ClBlastBenchmarker() : context() {}
+  ClBlasBenchmarker() : context() { clblasSetup(); }
 
   BENCHMARK_FUNCTION(scal_bench) {
     UNPACK_PARAM;
@@ -21,11 +64,10 @@ class ClBlastBenchmarker {
     {
       ScalarT alpha(2.4367453465);
       MemBuffer<ScalarT> buf1(context, size);
-
       cl_event event;
       flops = benchmark<>::measure(no_reps, size * 1, [&]() {
-        clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(),
-                               &event);
+        clblasXscal<ScalarT>::func(size, alpha, buf1.dev(), 0, 1, 1,
+                                   context._queue(), 0, NULL, &event);
         clWaitForEvents(1, &event);
         clReleaseEvent(event);
       });
@@ -38,13 +80,12 @@ class ClBlastBenchmarker {
     double flops;
     {
       ScalarT alpha(2.4367453465);
-      MemBuffer<ScalarT, CL_MEM_WRITE_ONLY> buf1(context, size);
+      MemBuffer<ScalarT> buf1(context, size);
       MemBuffer<ScalarT> buf2(context, size);
-
       cl_event event;
-      flops = benchmark<>::measure(no_reps, size * 2, [&]() {
-        clblast::Axpy<ScalarT>(size, alpha, buf1.dev(), 0, 1, buf2.dev(), 0, 1,
-                               context._queue(), &event);
+      flops = benchmark<>::measure(no_reps, size * 1, [&]() {
+        clblasXaxpy<ScalarT>::func(size, alpha, buf1.dev(), 0, 1, buf2.dev(), 0,
+                                   1, 1, context._queue(), 0, NULL, &event);
         clWaitForEvents(1, &event);
         clReleaseEvent(event);
       });
@@ -59,14 +100,17 @@ class ClBlastBenchmarker {
       ScalarT vr;
       MemBuffer<ScalarT, CL_MEM_WRITE_ONLY> buf1(context, size);
       MemBuffer<ScalarT, CL_MEM_READ_ONLY> bufr(context, &vr, 1);
-
+      cl_mem scratch = clCreateBuffer(context, CL_MEM_READ_WRITE,
+                                      size * sizeof(ScalarT), NULL, NULL);
       cl_event event;
       flops = benchmark<>::measure(no_reps, size * 2, [&]() {
-        clblast::Asum<ScalarT>(size, bufr.dev(), 0, buf1.dev(), 0, 1,
-                               context._queue(), &event);
+        clblasXasum<ScalarT>::func(size, bufr.dev(), 0, buf1.dev(), 0, 1,
+                                   scratch, 1, context._queue(), 0, NULL,
+                                   &event);
         clWaitForEvents(1, &event);
         clReleaseEvent(event);
       });
+      clReleaseMemObject(scratch);
     }
     return flops;
   }
@@ -78,14 +122,17 @@ class ClBlastBenchmarker {
       ScalarT vr;
       MemBuffer<ScalarT, CL_MEM_WRITE_ONLY> buf1(context, size);
       MemBuffer<ScalarT, CL_MEM_READ_ONLY> bufr(context, &vr, 1);
-
+      cl_mem scratch = clCreateBuffer(context, CL_MEM_READ_WRITE,
+                                      2 * size * sizeof(ScalarT), NULL, NULL);
       cl_event event;
       flops = benchmark<>::measure(no_reps, size * 2, [&]() {
-        clblast::Nrm2<ScalarT>(size, bufr.dev(), 0, buf1.dev(), 0, 1,
-                               context._queue(), &event);
+        clblasXnrm2<ScalarT>::func(size, bufr.dev(), 0, buf1.dev(), 0, 1,
+                                   scratch, 1, context._queue(), 0, NULL,
+                                   &event);
         clWaitForEvents(1, &event);
         clReleaseEvent(event);
       });
+      clReleaseMemObject(scratch);
     }
     return flops;
   }
@@ -98,14 +145,17 @@ class ClBlastBenchmarker {
       MemBuffer<ScalarT, CL_MEM_WRITE_ONLY> buf1(context, size);
       MemBuffer<ScalarT, CL_MEM_WRITE_ONLY> buf2(context, size);
       MemBuffer<ScalarT, CL_MEM_READ_ONLY> bufr(context, &vr, 1);
-
+      cl_mem scratch = clCreateBuffer(context, CL_MEM_READ_WRITE,
+                                      size * sizeof(ScalarT), NULL, NULL);
       cl_event event;
       flops = benchmark<>::measure(no_reps, size * 2, [&]() {
-        clblast::Dot<ScalarT>(size, bufr.dev(), 0, buf1.dev(), 0, 1, buf2.dev(),
-                              0, 1, context._queue(), &event);
+        clblasXdot<ScalarT>::func(size, bufr.dev(), 0, buf1.dev(), 0, 1,
+                                  buf2.dev(), 0, 1, scratch, 1,
+                                  context._queue(), 0, NULL, &event);
         clWaitForEvents(1, &event);
         clReleaseEvent(event);
       });
+      clReleaseMemObject(scratch);
     }
     return flops;
   }
@@ -114,40 +164,23 @@ class ClBlastBenchmarker {
     UNPACK_PARAM;
     double flops;
     {
-      int vi;
+      unsigned vi;
       MemBuffer<ScalarT, CL_MEM_WRITE_ONLY> buf1(context, size);
-      MemBuffer<int, CL_MEM_READ_ONLY> buf_i(context, &vi, 1);
-
+      MemBuffer<unsigned, CL_MEM_READ_ONLY> buf_i(context, &vi, 1);
+      cl_mem scratch = clCreateBuffer(context, CL_MEM_READ_WRITE,
+                                      size * sizeof(ScalarT), NULL, NULL);
       cl_event event;
       flops = benchmark<>::measure(no_reps, size * 2, [&]() {
-        clblast::Amax<ScalarT>(size, buf_i.dev(), 0, buf1.dev(), 0, 1,
-                               context._queue(), &event);
+        clblasiXamax<ScalarT>::func(size, buf_i.dev(), 0, buf1.dev(), 0, 1,
+                                    scratch, 1, context._queue(), 0, NULL,
+                                    &event);
         clWaitForEvents(1, &event);
         clReleaseEvent(event);
       });
+      clReleaseMemObject(scratch);
     }
     return flops;
   }
-
-  // not supported at current release yet
-  /* BENCHMARK_FUNCTION(iamin_bench) { */
-  /*   UNPACK_PARAM; */
-  /*   double flops; */
-  /*   { */
-  /*     int vi; */
-  /*     MemBuffer<ScalarT> buf1(context, size); */
-  /*     MemBuffer<int> buf_i(context, &vi, 1); */
-
-  /*     cl_event event; */
-  /*     flops = benchmark<>::measure(no_reps, [&]() { */
-  /*       clblast::Amin<ScalarT>(size, buf_i.dev(), 0, buf1.dev(), 0, 1, */
-  /*                               context._queue(), &event); */
-  /*       clWaitForEvents(1, &event); */
-  /*       clReleaseEvent(event); */
-  /*     }); */
-  /*   } */
-  /*   return flops; */
-  /* } */
 
   BENCHMARK_FUNCTION(scal2op_bench) {
     UNPACK_PARAM;
@@ -156,13 +189,12 @@ class ClBlastBenchmarker {
       ScalarT alpha(2.4367453465);
       MemBuffer<ScalarT> buf1(context, size);
       MemBuffer<ScalarT> buf2(context, size);
-
       cl_event events[2];
       flops = benchmark<>::measure(no_reps, size * 2, [&]() {
-        clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(),
-                               &events[0]);
-        clblast::Scal<ScalarT>(size, alpha, buf2.dev(), 0, 1, context._queue(),
-                               &events[1]);
+        clblasXscal<ScalarT>::func(size, alpha, buf1.dev(), 0, 1, 1,
+                                   context._queue(), 0, NULL, &events[0]);
+        clblasXscal<ScalarT>::func(size, alpha, buf2.dev(), 0, 1, 1,
+                                   context._queue(), 0, NULL, &events[1]);
         clWaitForEvents(2, events);
         clReleaseEvent(events[0]);
         clReleaseEvent(events[1]);
@@ -179,15 +211,14 @@ class ClBlastBenchmarker {
       MemBuffer<ScalarT> buf1(context, size);
       MemBuffer<ScalarT> buf2(context, size);
       MemBuffer<ScalarT> buf3(context, size);
-
       cl_event events[3];
       flops = benchmark<>::measure(no_reps, size * 3, [&]() {
-        clblast::Scal<ScalarT>(size, alpha, buf1.dev(), 0, 1, context._queue(),
-                               &events[0]);
-        clblast::Scal<ScalarT>(size, alpha, buf2.dev(), 0, 1, context._queue(),
-                               &events[1]);
-        clblast::Scal<ScalarT>(size, alpha, buf3.dev(), 0, 1, context._queue(),
-                               &events[2]);
+        clblasXscal<ScalarT>::func(size, alpha, buf1.dev(), 0, 1, 1,
+                                   context._queue(), 0, NULL, &events[0]);
+        clblasXscal<ScalarT>::func(size, alpha, buf2.dev(), 0, 1, 1,
+                                   context._queue(), 0, NULL, &events[1]);
+        clblasXscal<ScalarT>::func(size, alpha, buf3.dev(), 0, 1, 1,
+                                   context._queue(), 0, NULL, &events[2]);
         clWaitForEvents(3, events);
         clReleaseEvent(events[0]);
         clReleaseEvent(events[1]);
@@ -201,19 +232,29 @@ class ClBlastBenchmarker {
     UNPACK_PARAM;
     double flops;
     {
-      ScalarT alphas[] = {1.78426458744, 2.187346575843, 3.78164387328};
-      size_t offsets[] = {0, size, size * 2};
-      MemBuffer<ScalarT, CL_MEM_READ_ONLY> bufsrc(context, size * 3);
-      MemBuffer<ScalarT> bufdst(context, size * 3);
-
-      cl_event event;
-      flops = benchmark<>::measure(no_reps, size * 3 * 2, [&]() {
-        clblast::AxpyBatched<ScalarT>(size, alphas, bufsrc.dev(), offsets, 1,
-                                      bufdst.dev(), offsets, 1, 3,
-                                      context._queue(), &event);
+      ScalarT alpha(2.4367453465);
+      MemBuffer<ScalarT, CL_MEM_WRITE_ONLY> bufsrc1(context, size);
+      MemBuffer<ScalarT, CL_MEM_WRITE_ONLY> bufsrc2(context, size);
+      MemBuffer<ScalarT, CL_MEM_WRITE_ONLY> bufsrc3(context, size);
+      MemBuffer<ScalarT> bufdst1(context, size);
+      MemBuffer<ScalarT> bufdst2(context, size);
+      MemBuffer<ScalarT> bufdst3(context, size);
+      cl_event events[3];
+      flops = benchmark<>::measure(no_reps, size * 3, [&]() {
+        clblasXaxpy<ScalarT>::func(size, alpha, bufsrc1.dev(), 0, 1,
+                                   bufdst1.dev(), 0, 1, 1, context._queue(), 0,
+                                   NULL, &events[0]);
+        clblasXaxpy<ScalarT>::func(size, alpha, bufsrc2.dev(), 0, 1,
+                                   bufdst2.dev(), 0, 1, 1, context._queue(), 0,
+                                   NULL, &events[1]);
+        clblasXaxpy<ScalarT>::func(size, alpha, bufsrc3.dev(), 0, 1,
+                                   bufdst3.dev(), 0, 1, 1, context._queue(), 0,
+                                   NULL, &events[2]);
+        clWaitForEvents(3, events);
+        clReleaseEvent(events[0]);
+        clReleaseEvent(events[1]);
+        clReleaseEvent(events[2]);
       });
-      clWaitForEvents(1, &event);
-      clReleaseEvent(event);
     }
     return flops;
   }
@@ -223,35 +264,53 @@ class ClBlastBenchmarker {
     double flops;
     {
       ScalarT alpha(3.135345123);
+      ScalarT vr[4];
+      unsigned vi;
       MemBuffer<ScalarT> buf1(context, size);
       MemBuffer<ScalarT> buf2(context, size);
-      ScalarT vr[3];
-      size_t vi;
-      MemBuffer<ScalarT, CL_MEM_READ_ONLY> bufr(context, vr, 3);
-      MemBuffer<size_t, CL_MEM_READ_ONLY> buf_i(context, &vi, 1);
+      MemBuffer<ScalarT, CL_MEM_READ_ONLY> bufr(context, vr, 4);
+      MemBuffer<unsigned, CL_MEM_READ_ONLY> buf_i(context, &vi, 1);
+
+      cl_mem scratch[4];
+      for (int i = 0; i < 4; ++i) {
+        if (i == 2)
+          scratch[i] = clCreateBuffer(context, CL_MEM_READ_WRITE,
+                                      2 * size * sizeof(ScalarT), NULL, NULL);
+        else
+          scratch[i] = clCreateBuffer(context, CL_MEM_READ_WRITE,
+                                      size * sizeof(ScalarT), NULL, NULL);
+      }
 
       cl_event events[5];
       flops = benchmark<>::measure(no_reps, size * 12, [&]() {
-        clblast::Axpy<ScalarT>(size, alpha, buf1.dev(), 0, 1, buf2.dev(), 0, 1,
-                               context._queue(), &events[0]);
-        clblast::Asum<ScalarT>(size, bufr.dev(), 0, buf2.dev(), 0, 1,
-                               context._queue(), &events[1]);
-        clblast::Dot<ScalarT>(size, bufr.dev(), 1, buf1.dev(), 0, 1, buf2.dev(),
-                              0, 1, context._queue(), &events[2]);
-        clblast::Nrm2<ScalarT>(size, bufr.dev(), 2, buf1.dev(), 0, 1,
-                               context._queue(), &events[3]);
-        clblast::Amax<ScalarT>(size, buf_i.dev(), 0, buf1.dev(), 0, 1,
-                               context._queue(), &events[4]);
+        clblasXaxpy<ScalarT>::func(size, alpha, buf1.dev(), 0, 1, buf2.dev(), 0,
+                                   1, 1, context._queue(), 0, NULL, &events[0]);
+        clblasXasum<ScalarT>::func(size, bufr.dev(), 0, buf2.dev(), 0, 1,
+                                   scratch[0], 1, context._queue(), 0, NULL,
+                                   &events[1]);
+        clblasXdot<ScalarT>::func(size, bufr.dev(), 1, buf1.dev(), 0, 1,
+                                  buf2.dev(), 0, 1, scratch[1], 1,
+                                  context._queue(), 0, NULL, &events[2]);
+        clblasXnrm2<ScalarT>::func(size, bufr.dev(), 2, buf1.dev(), 0, 1,
+                                   scratch[2], 1, context._queue(), 0, NULL,
+                                   &events[3]);
+        clblasiXamax<ScalarT>::func(size, buf_i.dev(), 0, buf1.dev(), 0, 1,
+                                    scratch[3], 1, context._queue(), 0, NULL,
+                                    &events[4]);
         clWaitForEvents(5, events);
         for (int i = 0; i < 5; ++i) clReleaseEvent(events[i]);
       });
+
+      for (int i = 0; i < 4; ++i) clReleaseMemObject(scratch[i]);
     }
     return flops;
   }
+
+  ~ClBlasBenchmarker() { clblasTeardown(); }
 };
 
 BENCHMARK_MAIN_BEGIN(1 << 1, 1 << 24, 10);
-ClBlastBenchmarker blasbenchmark;
+ClBlasBenchmarker blasbenchmark;
 
 BENCHMARK_REGISTER_FUNCTION("scal_float", scal_bench<float>);
 BENCHMARK_REGISTER_FUNCTION("scal_double", scal_bench<double>);

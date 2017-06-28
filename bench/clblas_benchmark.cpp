@@ -273,7 +273,7 @@ class ClBlasBenchmarker {
 
       cl_mem scratch[4];
       for (int i = 0; i < 4; ++i) {
-        if (i == 2)
+        if (i == 2 || i == 3)
           scratch[i] = clCreateBuffer(context, CL_MEM_READ_WRITE,
                                       2 * size * sizeof(ScalarT), NULL, NULL);
         else

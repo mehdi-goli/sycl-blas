@@ -9,15 +9,15 @@
 
 #define UNPACK_PARAM using ScalarT = TypeParam;
 
-#define CLBLAS_FUNCTION(postfix)                         \
-  template <typename T>                                  \
-  struct clblasX##postfix;                               \
-  template <>                                            \
-  struct clblasX##postfix<float> {                       \
+#define CLBLAS_FUNCTION(postfix)                          \
+  template <typename T>                                   \
+  struct clblasX##postfix;                                \
+  template <>                                             \
+  struct clblasX##postfix<float> {                        \
     static constexpr const auto func = &clblasS##postfix; \
-  };                                                     \
-  template <>                                            \
-  struct clblasX##postfix<double> {                      \
+  };                                                      \
+  template <>                                             \
+  struct clblasX##postfix<double> {                       \
     static constexpr const auto func = &clblasD##postfix; \
   };
 /* template <> struct clblasX##postfix<std::complex<float>> { \ */
@@ -27,15 +27,15 @@
 /*   static constexpr const auto value = clblasZ##postfix; \ */
 /* }; */
 
-#define CLBLASI_FUNCTION(postfix)                         \
-  template <typename T>                                   \
-  struct clblasiX##postfix;                               \
-  template <>                                             \
-  struct clblasiX##postfix<float> {                       \
+#define CLBLASI_FUNCTION(postfix)                          \
+  template <typename T>                                    \
+  struct clblasiX##postfix;                                \
+  template <>                                              \
+  struct clblasiX##postfix<float> {                        \
     static constexpr const auto func = &clblasiS##postfix; \
-  };                                                      \
-  template <>                                             \
-  struct clblasiX##postfix<double> {                      \
+  };                                                       \
+  template <>                                              \
+  struct clblasiX##postfix<double> {                       \
     static constexpr const auto func = &clblasiD##postfix; \
   };
 /* template <> struct clblasiX##postfix<std::complex<float>> { \ */
@@ -168,7 +168,7 @@ class ClBlasBenchmarker {
       MemBuffer<ScalarT, CL_MEM_WRITE_ONLY> buf1(context, size);
       MemBuffer<unsigned, CL_MEM_READ_ONLY> buf_i(context, &vi, 1);
       cl_mem scratch = clCreateBuffer(context, CL_MEM_READ_WRITE,
-                                      size * sizeof(ScalarT), NULL, NULL);
+                                      2 * size * sizeof(ScalarT), NULL, NULL);
       cl_event event;
       flops = benchmark<>::measure(no_reps, size * 2, [&]() {
         clblasiXamax<ScalarT>::func(size, buf_i.dev(), 0, buf1.dev(), 0, 1,

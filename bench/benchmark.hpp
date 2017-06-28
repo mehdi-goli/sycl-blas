@@ -1,3 +1,6 @@
+#ifndef BENCHMARK_HPP_IUNTMPES
+#define BENCHMARK_HPP_IUNTMPES
+
 #include <chrono>
 #include <iomanip>
 #include <iostream>
@@ -97,3 +100,5 @@ struct benchmark {
 #define BENCHMARK_MAIN_END() \
   }                          \
   }
+
+#endif /* end of include guard: BENCHMARK_HPP_IUNTMPES */

@@ -111,7 +111,7 @@ void _swap(Executor<ExecutorType> ex, int _N, vector_view<T, ContainerT> _vx,
   my_vx.printH("VX");
   my_vy.printH("VY");
 #endif  //  VERBOSE
-  auto swapOp = make_op<DobleAssign>(my_vy, my_vx, my_vx, my_vy);
+  auto swapOp = make_op<DoubleAssign>(my_vy, my_vx, my_vx, my_vy);
   ex.execute(swapOp);
 #ifdef VERBOSE
   my_vx.printH("VX");
@@ -488,8 +488,8 @@ void _rot(Executor<ExecutorType> ex, int _N, vector_view<T, ContainerT> _vx,
   auto scalOp4 = make_op<ScalarOp, prdOp2_struct>(_cos, my_vy);
   auto addOp12 = make_op<BinaryOp, addOp2_struct>(scalOp1, scalOp2);
   auto addOp34 = make_op<BinaryOp, addOp2_struct>(scalOp3, scalOp4);
-  auto dobleAssignView = make_op<DobleAssign>(my_vx, my_vy, addOp12, addOp34);
-  ex.execute(dobleAssignView);
+  auto doubleAssignView = make_op<DoubleAssign>(my_vx, my_vy, addOp12, addOp34);
+  ex.execute(doubleAssignView);
 #ifdef VERBOSE
   my_vx.printH("VX");
   my_vy.printH("VY");

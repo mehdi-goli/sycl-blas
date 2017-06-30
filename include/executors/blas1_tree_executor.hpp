@@ -98,13 +98,13 @@ struct Evaluate<Assign<LHS, RHS>> {
  * @brief See Evaluate.
  */
 template <class LHS1, class LHS2, class RHS1, class RHS2>
-struct Evaluate<DobleAssign<LHS1, LHS2, RHS1, RHS2>> {
+struct Evaluate<DoubleAssign<LHS1, LHS2, RHS1, RHS2>> {
   using lhs1_type = typename Evaluate<LHS1>::type;
   using lhs2_type = typename Evaluate<LHS2>::type;
   using rhs1_type = typename Evaluate<RHS1>::type;
   using rhs2_type = typename Evaluate<RHS2>::type;
-  using input_type = DobleAssign<LHS1, LHS2, RHS1, RHS2>;
-  using type = DobleAssign<lhs1_type, lhs2_type, rhs1_type, rhs2_type>;
+  using input_type = DoubleAssign<LHS1, LHS2, RHS1, RHS2>;
+  using type = DoubleAssign<lhs1_type, lhs2_type, rhs1_type, rhs2_type>;
 
   static type convert_to(input_type v, cl::sycl::handler &h) {
     auto lhs1 = Evaluate<LHS1>::convert_to(v.l1, h);

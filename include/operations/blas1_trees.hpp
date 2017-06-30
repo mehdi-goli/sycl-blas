@@ -154,7 +154,7 @@ struct Assign {
 /*! DoubleAssign.
  */
 template <class LHS1, class LHS2, class RHS1, class RHS2>
-struct DobleAssign {
+struct DoubleAssign {
   LHS1 l1;
   LHS2 l2;
   RHS1 r1;
@@ -163,7 +163,7 @@ struct DobleAssign {
  public:
   using value_type = typename RHS1::value_type;
 
-  DobleAssign(LHS1 &_l1, LHS2 &_l2, RHS1 _r1, RHS2 _r2)
+  DoubleAssign(LHS1 &_l1, LHS2 &_l2, RHS1 _r1, RHS2 _r2)
       : l1(_l1), l2(_l2), r1(_r1), r2(_r2){};
 
   // PROBLEM: Only the RHS size is considered. If LHS size is different??

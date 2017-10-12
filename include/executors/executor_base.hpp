@@ -60,7 +60,7 @@ class Executor<Sequential> {
     for (size_t i = 0; i < _N; i++) {
       t.eval(i);
     }
-  };
+  }
 };
 
 /*! Executor<Parallel>.
@@ -77,7 +77,7 @@ class Executor<Parallel> {
     for (size_t i = 0; i < _N; i++) {
       t.eval(i);
     }
-  };
+  }
 };
 
 }  // namespace blas

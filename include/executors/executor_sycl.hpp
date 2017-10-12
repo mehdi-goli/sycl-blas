@@ -54,7 +54,7 @@ namespace blas {
 namespace using_shared_mem {
 static const int enabled = 0;
 static const int disabled = 1;
-};
+}
 
 /*!
 @brief Template alias for a local accessor.
@@ -294,7 +294,7 @@ class Executor<SYCL> {
     auto globalSize = nWG * localSize;
 
     execute_tree<using_shared_mem::disabled>(q_, t, localSize, globalSize, 0);
-  };
+  }
 
   /*!
    * @brief Executes the tree fixing the localSize but without defining required
@@ -308,7 +308,7 @@ class Executor<SYCL> {
     auto globalSize = nWG * localSize;
 
     execute_tree<using_shared_mem::disabled>(q_, t, localSize, globalSize, 0);
-  };
+  }
 
   /*!
    * @brief Executes the tree with specific local, global and shared memory
@@ -372,7 +372,7 @@ class Executor<SYCL> {
       frst = false;
       even = !even;
     } while (_N > 1);
-  };
+  }
 
   /*!
    * @brief Applies a reduction to a tree, receiving a scratch buffer.
@@ -421,7 +421,7 @@ class Executor<SYCL> {
       frst = false;
       even = !even;
     } while (_N > 1);
-  };
+  }
 };
 
 }  // namespace blas

@@ -43,31 +43,45 @@ using namespace cl::sycl;
 
 
 namespace blas {
-
+#define ConvertToActualType(ptrClass, ConvertType, offset)  \
+ static_cast<cl::sycl::global_ptr<ConvertType>>(static_cast<ConvertType*>(static_cast<void*>((ptrClass.get() + offset))))
 
 template <typename T>
 struct Wrap {};
-
+template <typename GemType, typename ConvertType> struct GemConvertor;
+template< bool DoubleBuffer, bool ConflictA, bool ConflictB, int ClSize, typename TileT,
+            bool  _trans_a, bool _trans_b, typename T , typename ConvertType>
+            struct GemConvertor < GemmFactory<DoubleBuffer, ConflictA, ConflictB, ClSize, TileT,
+                            _trans_a, _trans_b, T>, ConvertType> {
+  typedef GemmFactory<DoubleBuffer, ConflictA, ConflictB, ClSize, TileT,
+                  _trans_a, _trans_b, ConvertType> Type;
+};
 
 /*!
  * @brief Launch a kernel which calls a GemmFactory instance given by template
  *        parameter Gemm.
  */
-template <typename Gemm, typename ExecutorType, typename T>
+template <typename Gemm, typename ExecutorType, typename T, typename ContainerT, typename ConvertType=T>
 void _gemm_tr(Executor<ExecutorType> ex, int _M, int _N, int _K, T _alpha,
-              cl::sycl::buffer<T, 1> _A, int _lda,
-              cl::sycl::buffer<T, 1> _B, int _ldb, T _beta,
-              cl::sycl::buffer<T, 1> _C, int _ldc) {
+              ContainerT _A, int _lda,
+              ContainerT _B, int _ldb, T _beta,
+              ContainerT _C, int _ldc) {
   ex.sycl_queue().submit([&](handler &h) {
-    auto accA = _A.template get_access<access::mode::read>(h);
-    auto accB = _B.template get_access<access::mode::read>(h);
-    auto accC = _C.template get_access<access::mode::read_write>(h);
-    accessor<T, 1, access::mode::read_write, access::target::local> scratch(
-        range<1>(Gemm::scratch_size), h);
-    h.parallel_for<Wrap<Gemm>>(Gemm::get_nd_range(_M, _N), [=](nd_item<1> id) {
-      Gemm::run(id, id.get_group(0), id.get_local(0), _M, _N, _K, T(_alpha),
-                accA.get_pointer(), _lda, accB.get_pointer(), _ldb, T(_beta),
-                accC.get_pointer(), _ldc, scratch.get_pointer());
+    typedef typename GemConvertor<Gemm, ConvertType>::Type GemmType;
+    auto accA = _A.getData().template get_access<access::mode::read>(h);
+    auto accB = _B.getData().template get_access<access::mode::read>(h);
+    auto accC = _C.getData().template get_access<access::mode::read_write>(h);
+    auto a_offset = _A.getDisp();
+    auto b_offset = _B.getDisp();
+    auto c_offset = _C.getDisp();
+
+    accessor<ConvertType, 1, access::mode::read_write, access::target::local> scratch(
+        range<1>(GemmType::scratch_size), h);
+    h.parallel_for<Wrap<GemmType>>(GemmType::get_nd_range(_M, _N), [=](nd_item<1> id) {
+      GemmType::run(id, id.get_group(0), id.get_local(0), _M, _N, _K, ConvertType(_alpha),
+              ConvertToActualType(accA.get_pointer(), ConvertType, a_offset),
+                _lda, ConvertToActualType(accB.get_pointer(), ConvertType, b_offset), _ldb, ConvertType(_beta),
+              ConvertToActualType(accC.get_pointer(), ConvertType, c_offset), _ldc, scratch.get_pointer());
     });
   });
   ex.sycl_queue().wait();
@@ -79,17 +93,17 @@ void _gemm_tr(Executor<ExecutorType> ex, int _M, int _N, int _K, T _alpha,
  *        runtime values of transpose.
  */
 template <bool DoubleBuffer, bool ConflictA, bool ConflictB, size_t ClSize,
-          typename TileT, typename ExecutorType, typename T>
+          typename TileT, typename ExecutorType, typename T, typename ContainerT, typename ConvertType=T>
 void _select_gemm(
     Executor<ExecutorType> ex, bool _TransA, bool _TransB, int _M,
-               int _N, int _K, T _alpha, cl::sycl::buffer<T, 1> _A, int _lda,
-               cl::sycl::buffer<T, 1> _B, int _ldb, T _beta,
-               cl::sycl::buffer<T, 1> _C, int _ldc) {
+               int _N, int _K, T _alpha,  ContainerT _A, int _lda,
+                 ContainerT _B, int _ldb, T _beta,
+                 ContainerT _C, int _ldc) {
   #define ENABLE_GEMM_TRANSPOSE(_trans_a, _trans_b) \
   if (_TransA == _trans_a && _TransB == _trans_b) { \
     _gemm_tr<\
       GemmFactory<DoubleBuffer, ConflictA, ConflictB, ClSize, TileT, \
-                  _trans_a, _trans_b, T>>( \
+                  _trans_a, _trans_b, T>, ExecutorType, T, ContainerT, ConvertType>( \
         ex, _M, _N, _K, _alpha, _A, _lda, _B, _ldb, _beta, _C, _ldc); \
     return; \
   }
@@ -112,11 +126,11 @@ void _select_gemm(
  *
  * See netlib.org/blas for details.
  */
-template <typename ExecutorType, typename T>
+template <typename ExecutorType, typename T, typename ContainerT, typename ConvertType=T>
 void _gemm(Executor<ExecutorType> ex, char _TransA, char _TransB, int _M,
-           int _N, int _K, T _alpha, cl::sycl::buffer<T, 1> _A, int _lda,
-           cl::sycl::buffer<T, 1> _B, int _ldb, T _beta,
-           cl::sycl::buffer<T, 1> _C, int _ldc) {
+           int _N, int _K, T _alpha,   ContainerT _A, int _lda,
+             ContainerT _B, int _ldb, T _beta,
+             ContainerT _C, int _ldc) {
   _TransA = tolower(_TransA);
   _TransB = tolower(_TransB);
   if(_TransA != 'n' && _TransA != 't' && _TransA != 'c') {
@@ -134,7 +148,7 @@ void _gemm(Executor<ExecutorType> ex, char _TransA, char _TransB, int _M,
   #define BIND_DEFAULT
 
   #define TO_TPARAMS(_db, _tir, _tic, _twr, _twc) {\
-    _select_gemm<_db, false, false, 64, Tile<_tir, _tic, _twr, _twc>>( \
+    _select_gemm<_db, false, false, 64, Tile<_tir, _tic, _twr, _twc>, ExecutorType, T, ContainerT, ConvertType>( \
         ex, _TrA, _TrB, _M, _N, _K, _alpha, _A, _lda, _B, _ldb, \
         _beta, _C, _ldc); \
     return; \
@@ -159,4 +173,3 @@ void _gemm(Executor<ExecutorType> ex, char _TransA, char _TransB, int _M,
 
 
 #endif  // BLAS3_INTERFACE_SYCL_HPP
-

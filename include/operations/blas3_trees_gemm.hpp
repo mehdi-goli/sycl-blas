@@ -488,9 +488,13 @@ private:
         (s2, s4, reg_a, reg_b, reg_res);
     }
 
+    #ifdef __SYCL_DEVICE_ONLY__
     #pragma unroll
+    #endif
     for (int i = 0; i < item_cols; ++i) {
+      #ifdef __SYCL_DEVICE_ONLY__
       #pragma unroll
+      #endif
       for (int j = 0; j < item_rows; ++j) {
         const bool in_range = do_check<check_m_limit>(j*wg_rows < mc) &&
                               do_check<check_n_limit>(i < nc);
@@ -516,12 +520,12 @@ private:
   {
     extract_block
       <check_m_limit, check_k_limit, trans_a, block_rows, cl_elems, ldsa>
-      (item_id, A, lda, sA, [&](int ir, int cr) { return cr < m; },
+      (item_id, A, lda, sA, [&](int , int cr) { return cr < m; },
        [&](int ic, int cc) { return cc < k - ic; });
     extract_block
       <check_k_limit, check_n_limit, trans_b, cl_elems, block_cols, ldsb>
       (item_id, B, ldb, sB, [&](int ir, int cr) { return cr < k - ir; },
-       [&](int ic, int cc) { return cc < n; });
+       [&](int , int cc) { return cc < n; });
   }
 
   /*!
@@ -564,7 +568,9 @@ private:
       RowPredicate in_row, ColPredicate in_col)
   {
     const int bs = rows * cols;
+    #ifdef __SYCL_DEVICE_ONLY__
     #pragma unroll
+    #endif
     for (int i = 0; i < (bs - 1) / wg_size + 1; ++i) {
       if (!do_check<bs % wg_size>(item_id + i*wg_size < bs)) continue;
       const int col_ofs = i * (wg_size/rows);
@@ -585,7 +591,9 @@ private:
       RowPredicate in_row, ColPredicate in_col)
   {
     const int bs = rows * cols;
+    #ifdef __SYCL_DEVICE_ONLY__
     #pragma unroll
+    #endif
     for (int i = 0; i < (bs - 1) / wg_size + 1; ++i) {
       if (!do_check<bs % wg_size>(item_id + i*wg_size < bs)) continue;
       const int row_ofs = i * (wg_size/cols);
@@ -620,14 +628,20 @@ private:
     //       amortize the cost of loading the larger kernel binary resulting
     //       from loop unrollment.
     for (int i = 0; i < cl_elems; ++i) {
+      #ifdef __SYCL_DEVICE_ONLY__
       #pragma unroll
+      #endif
       for (int j = 0; j < item_rows; ++j) {
         reg_a[j] = A[j*wg_rows];
       }
+      #ifdef __SYCL_DEVICE_ONLY__
       #pragma unroll
+      #endif
       for (int j = 0; j < item_cols; ++j) {
         reg_b = B[j*ldsb];
+        #ifdef __SYCL_DEVICE_ONLY__
         #pragma unroll
+        #endif
         for (int l = 0; l < item_rows; ++l) {
           reg_res[l][j] += reg_a[l] * reg_b;
         }
@@ -681,4 +695,3 @@ private:
 
 
 #endif  // BLAS3_TREES_GEMM_HPP
-

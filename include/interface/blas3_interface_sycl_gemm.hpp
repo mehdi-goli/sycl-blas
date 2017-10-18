@@ -74,7 +74,13 @@ void _gemm_tr(Executor<ExecutorType> ex, int _M, int _N, int _K, T _alpha,
     auto a_offset = _A.getDisp();
     auto b_offset = _B.getDisp();
     auto c_offset = _C.getDisp();
+    auto accA_ = reinterpret_cast<ConvertType*>(_A.getData().template get_access<access::mode::read>().get_pointer());
+    auto accB_ = reinterpret_cast<ConvertType*>(_B.getData().template get_access<access::mode::read>().get_pointer());
+    for(int i=0; i< _M*_K ; i++) std::cout << "A[" << i << "] = " <<accA_[i] <<'\n';
+    for(int i=0; i< _K*_N ; i++) std::cout << "B[" << i << "] = " <<accB_[i] <<'\n';
 
+
+    std::cout  << " _M:" <<  _M <<" _N : " << _N<< " _K :" << _K << std::endl;
     accessor<ConvertType, 1, access::mode::read_write, access::target::local> scratch(
         range<1>(GemmType::scratch_size), h);
     h.parallel_for<Wrap<GemmType>>(GemmType::get_nd_range(_M, _N), [=](nd_item<1> id) {

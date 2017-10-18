@@ -39,7 +39,7 @@
 #include <operations/blas3_trees_gemm.hpp>
 
 
-using namespace cl::sycl;
+//using namespace cl::sycl;
 
 
 namespace blas {
@@ -66,24 +66,24 @@ void _gemm_tr(Executor<ExecutorType> ex, int _M, int _N, int _K, T _alpha,
               ContainerT _A, int _lda,
               ContainerT _B, int _ldb, T _beta,
               ContainerT _C, int _ldc) {
-  ex.sycl_queue().submit([&](handler &h) {
+  ex.sycl_queue().submit([&](cl::sycl::handler &h) {
     typedef typename GemConvertor<Gemm, ConvertType>::Type GemmType;
-    auto accA = _A.getData().template get_access<access::mode::read>(h);
-    auto accB = _B.getData().template get_access<access::mode::read>(h);
-    auto accC = _C.getData().template get_access<access::mode::read_write>(h);
+    auto accA = _A.getData().template get_access<cl::sycl::access::mode::read>(h);
+    auto accB = _B.getData().template get_access<cl::sycl::access::mode::read>(h);
+    auto accC = _C.getData().template get_access<cl::sycl::access::mode::read_write>(h);
     auto a_offset = _A.getDisp();
     auto b_offset = _B.getDisp();
     auto c_offset = _C.getDisp();
-    auto accA_ = reinterpret_cast<ConvertType*>(_A.getData().template get_access<access::mode::read>().get_pointer());
-    auto accB_ = reinterpret_cast<ConvertType*>(_B.getData().template get_access<access::mode::read>().get_pointer());
+    auto accA_ = reinterpret_cast<ConvertType*>(_A.getData().template get_access<cl::sycl::access::mode::read>().get_pointer());
+    auto accB_ = reinterpret_cast<ConvertType*>(_B.getData().template get_access<cl::sycl::access::mode::read>().get_pointer());
     for(int i=0; i< _M*_K ; i++) std::cout << "A[" << i << "] = " <<accA_[i] <<'\n';
     for(int i=0; i< _K*_N ; i++) std::cout << "B[" << i << "] = " <<accB_[i] <<'\n';
 
 
     std::cout  << " _M:" <<  _M <<" _N : " << _N<< " _K :" << _K << std::endl;
-    accessor<ConvertType, 1, access::mode::read_write, access::target::local> scratch(
-        range<1>(GemmType::scratch_size), h);
-    h.parallel_for<Wrap<GemmType>>(GemmType::get_nd_range(_M, _N), [=](nd_item<1> id) {
+    cl::sycl::accessor<ConvertType, 1, cl::sycl::access::mode::read_write, cl::sycl::access::target::local> scratch(
+        cl::sycl::range<1>(GemmType::scratch_size), h);
+    h.parallel_for<Wrap<GemmType>>(GemmType::get_nd_range(_M, _N), [=](cl::sycl::nd_item<1> id) {
       GemmType::run(id, id.get_group(0), id.get_local(0), _M, _N, _K, ConvertType(_alpha),
               ConvertToActualType(accA.get_pointer(), ConvertType, a_offset),
                 _lda, ConvertToActualType(accB.get_pointer(), ConvertType, b_offset), _ldb, ConvertType(_beta),
